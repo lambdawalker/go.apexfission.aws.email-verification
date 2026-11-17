@@ -153,8 +153,8 @@ cannot do so. The retrieval and freshness contract is defined below.
 Rollback protection must preserve the highest revision seen and learned
 revocations across Lambda restarts. Reject lower revisions, conflicting content
 at the same revision, and attempts to restore a revoked key. Durable storage,
-concurrent updates and content-comparison rules still need
-concrete contracts; an in-memory cache alone is insufficient.
+and concurrent updates follow the host durable trust contract below. The exact
+content-digest representation remains to be specified; an in-memory cache alone is insufficient.
 
 An unchanged document can remain authoritative. A successful check against the
 authoritative source refreshes cache age; `updated_at` remains the last change
@@ -257,8 +257,8 @@ immediate blocking when retrieval fails.
 A new host has no prior revision for comparison. Initial trust comes from its
 configured AWS/HTTPS source; durable revision and revocation tracking protects
 subsequent refreshes across restarts. Resetting that durable state loses this
-history and must not be a routine error-recovery mechanism. Detailed durable
-storage, concurrency and content-comparison mechanics remain to be specified.
+history and must not be a routine error-recovery mechanism. Durable storage and concurrency follow the contract below; exact content-digest
+representation remains to be specified.
 
 References: [S3 consistency](https://aws.amazon.com/s3/consistency/)
 and [HTTP caching](https://www.rfc-editor.org/rfc/rfc9111.html).
@@ -266,10 +266,48 @@ and [HTTP caching](https://www.rfc-editor.org/rfc/rfc9111.html).
 ### Decisions still open for this item
 
 - Initial trust provisioning and detailed publication/recovery contracts; the signed-record format and S3 legal-hold protection are decided.
-- Durable rollback enforcement mechanics, including host storage, concurrency and content comparison. Key-entry and revocation fields, lifecycle states, default locations and retrieval/freshness behavior are decided.
+- Exact content-digest representation and bounded retry settings. Host-owned durable storage and atomic concurrency behavior are decided below.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
 [JWT validation guidance (RFC 8725)](https://www.rfc-editor.org/rfc/rfc8725.html),
 [KMS public keys](https://docs.aws.amazon.com/kms/latest/APIReference/API_GetPublicKey.html),
 and [KMS rotation](https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html).
 
+
+## Host durable trust history
+
+```mermaid
+sequenceDiagram
+ participant V as Host validator
+ participant S as Authoritative status source
+ participant I as Host store interface
+ participant D as Host database
+ V->>I: Load checkpoint and storage version
+ I->>D: Read durable state
+ D-->>V: State or explicit not-found
+ V->>S: Retrieve current status
+ S-->>V: Full status document
+ V->>V: Validate revision, content and revocations
+ V->>I: Compare-and-save against storage version
+ I->>D: Atomic conditional write
+ alt Write succeeds
+ D-->>V: Committed
+ V->>V: Use refreshed trust information
+ else Concurrent writer wins
+ D-->>V: Conflict
+ V->>V: Reload and reevaluate with bounded retries
+ else Storage unavailable
+ D-->>V: Failure
+ V->>V: Refresh fails without renewing cache age
+ end
+```
+
+Decision: production validators require host-owned durable trust storage. Provide a `TrustState` model, a `TrustStateStore` interface with load and atomic compare-and-save operations, and a default DynamoDB adapter. Other databases may implement the same contract. The host supplies configuration and permissions; the verifier service cannot access this store.
+
+Scope each checkpoint by issuer and configured trust-source identity. Store the highest accepted status revision, its content digest, permanently revoked key IDs, and a storage concurrency version. Public keys and complete signed archive records need not be duplicated here. The in-memory cache holds retrieved keys and status; the checkpoint alone cannot validate assertions.
+
+Require durable reads and atomic conditional writes. First initialization must also be conditional on absence. A higher revision must preserve known revocations; an equal revision must have matching content; lower or conflicting revisions fail and alert. On a write conflict, reload and reevaluate, with bounded retries. Never overwrite newer state or interpret an unavailable database as an empty store.
+
+After restart, load durable history before accepting refreshed status. Persistence failure makes the refresh unsuccessful and does not reset cache age. An already-running instance may use its previously validated cache only within the existing maximum age and all validation rules; a cold instance without a usable cache blocks acceptance. Known revocations always override cached authorization.
+
+This is rollback protection during refresh, not fleet-wide instantaneous revocation notification. Existing refresh and outage limits still bound when another running instance learns a change. The precise digest representation and retry bound remain implementation details to specify consistently across adapters.
