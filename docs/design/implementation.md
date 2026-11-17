@@ -19,8 +19,11 @@ This does not remove client authorization or AWS resource permissions.
 - Implement [confirmation and recoverable issuance](confirmation.md); finalize
   retry authorization, claim reservation and worker fencing.
 - Implement [result delivery and acknowledgment](result-delivery.md) through the
-  default internal call. Finalize retry/reconciliation settings, client status
-  authorization and retention; defer separate-service transport details.
+  default internal call. Finalize retry/reconciliation settings and retention;
+  defer separate-service transport details.
+- Implement [client status authorization](client-status.md): host-owned read-only
+  operation token, hash-only storage and thirty-minute default. Finalize issuance,
+  replacement, revocation and client transport details.
 - Move eligibility, Cognito enrollment and grants/session code to the host side;
   remove their permissions and integration requirements from the verifier.
 - Add shared assertion validation and host acceptance contracts; keep signing
