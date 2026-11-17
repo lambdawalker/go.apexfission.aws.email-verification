@@ -116,10 +116,56 @@ Historical storage never restores active trust.
 
 Reference: [AWS KMS key deletion](https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html).
 
+### Key-status document and lifecycle states
+
+Decision: publish one authoritative JSON key-status document, with the same
+content available through direct AWS access and HTTPS. This is planned behavior,
+not an implemented endpoint. Current status remains separate from immutable
+historical public-key records.
+
+| Field | Purpose |
+| --- | --- |
+| `schema_version` | Document format version. |
+| `issuer` | Verifier whose keys are described. |
+| `revision` | Monotonically increasing revision on every status change. |
+| `updated_at` | Time of the last status change, not the last retrieval. |
+| `keys` | Key IDs, lifecycle states, authorized signing windows, and exact archived-record references. |
+| `revocations` | Permanent revoked key IDs with revocation times and reasons. |
+
+| State | Host behavior |
+| --- | --- |
+| `published` | Cache the upcoming key; do not accept assertions from it yet. |
+| `active` | Accept otherwise-valid assertions within the authorized signing window. |
+| `retiring` | Accept outstanding assertions issued before signing stopped, only within the remaining acceptance window. |
+| `retired` | Reject new acceptance; retain historical records. |
+| `revoked` | Reject immediately upon learning revocation, regardless of assertion timestamps. |
+
+Every acceptance still requires signature, issuer, audience, timing and operation
+binding checks. Retiring does not authorize new signing. Revocation is permanent
+and overrides any conflicting lifecycle state; never reuse a revoked key ID.
+
+Proposed default locations are `trust/key-status.json` in a configured S3 bucket
+and `/verification/key-status.json` alongside the HTTPS JWKS endpoint. Locations
+are configured trusted sources, not selected by an incoming assertion. Only the
+separate administrative/publishing role can update status; the verifier runtime
+cannot do so. Exact delivery and freshness contracts remain the next design step.
+
+Rollback protection must preserve the highest revision seen and learned
+revocations across Lambda restarts. Reject lower revisions, conflicting content
+at the same revision, and attempts to restore a revoked key. Durable storage,
+concurrent updates, initial bootstrap and content-comparison rules still need
+concrete contracts; an in-memory cache alone is insufficient.
+
+An unchanged document can remain authoritative. A successful check against the
+authoritative source refreshes cache age; `updated_at` remains the last change
+time. An old intermediary response must not reset freshness. Define how each
+retrieval route proves a successful authoritative check before implementation,
+using the existing refresh, cooldown and maximum-age limits.
+
 ### Decisions still open for this item
 
 - Initial trust provisioning and detailed publication/recovery contracts; the signed-record format and S3 legal-hold protection are decided.
-- Key-status wire schema, companion endpoint path, and concrete freshness/rollback checks.
+- Detailed nested key-entry schema, retrieval/freshness contract, and durable rollback enforcement. Top-level fields and lifecycle states are decided; default locations are proposed.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
 [JWT validation guidance (RFC 8725)](https://www.rfc-editor.org/rfc/rfc8725.html),
