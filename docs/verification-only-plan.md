@@ -227,6 +227,39 @@ Use an asymmetric AWS KMS signing key. The verifier calls KMS to sign, and the
 application does not receive the private key. Restrict signing permissions to the
 verifier role and keep signing keys separate from proof HMAC keys.
 
+#### Public-key retrieval: direct AWS access or HTTPS JWKS
+
+Both routes supply the same trusted public signing keys for local assertion
+validation. Direct KMS access is the preferred route for the composed host inside
+the AWS environment; the HTTPS endpoint is optional for other consumers.
+
+| Route | Intended consumer | Access and trust configuration |
+| --- | --- | --- |
+| Direct AWS KMS `GetPublicKey` | Host running inside the AWS environment | Deployment-configured trusted key ARNs and a runtime IAM role authorized by the applicable IAM/key policies to call `kms:GetPublicKey` on those keys. |
+| HTTPS JWKS | Consumers using a published key set | Preconfigured trusted issuer and HTTPS JWKS URL; no AWS credentials required to read the public endpoint. |
+
+For direct AWS access, deployment supplies a trusted mapping from assertion
+`kid` values to immutable KMS key ARNs, covering the current key and previous
+keys still accepted during rotation. The host retrieves and caches their public
+keys through the AWS SDK, then verifies ES256 locally. Importing the Go module
+does not grant AWS permissions or automatically discover trusted keys. Retrieving
+a public key requires no signing permission. Never use an untrusted token's
+`kid` as an arbitrary KMS key ARN to fetch and trust.
+
+KMS returns a DER-encoded SPKI public key, which can be parsed directly for local
+verification; converting it to JWK is needed only when publishing the JWKS.
+Direct access avoids calling the host's public JWKS URL, but still makes an
+authenticated AWS API request on cache misses or refresh.
+
+Both routes must receive rotation updates before signer cutover and retain
+previous public keys for the acceptance overlap. Cache refresh and revocation
+rules must apply to both routes; a cached key must not remain trusted indefinitely
+after removal or revocation. Exact cache durations remain an implementation
+decision. A mutable signing alias alone is insufficient to identify previous
+verification keys.
+
+#### Optional HTTPS publication
+
 Proposed stable public-key URL on the host API domain:
 
 ```text
