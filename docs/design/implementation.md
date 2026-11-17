@@ -9,6 +9,10 @@ internal initiation and acceptance calls. Separate-service transport and its
 authentication are deferred to [Separate deployment](separate-deployment.md).
 This does not remove client authorization or AWS resource permissions.
 
+Use [separate DynamoDB on-demand tables](storage-ownership.md) for verifier and
+host records by default. Supply the DynamoDB adapter behind storage interfaces;
+keep host storage replaceable and cleanup scoped to its owning component.
+
 ## Next implementation decisions
 
 - Finalize the remaining choices in [Assertion schema, signing, and trusted keys](../design/assertions.md#assertion-schema-signing-and-trusted-keys).
