@@ -2,6 +2,13 @@
 
 [Design overview](../verification-only-plan.md)
 
+## Default implementation scope
+
+Build the verifier as an imported library inside the host process, using trusted
+internal initiation and acceptance calls. Separate-service transport and its
+authentication are deferred to [Separate deployment](separate-deployment.md).
+This does not remove client authorization or AWS resource permissions.
+
 ## Next implementation decisions
 
 - Finalize the remaining choices in [Assertion schema, signing, and trusted keys](../design/assertions.md#assertion-schema-signing-and-trusted-keys).
@@ -11,9 +18,9 @@
   start and idempotency. Finalize its transport, retention and delivery details.
 - Implement [confirmation and recoverable issuance](confirmation.md); finalize
   retry authorization, claim reservation and worker fencing.
-- Implement [result delivery and acknowledgment](result-delivery.md) for direct-call
-  and separate-service deployments; finalize authentication, wire contracts,
-  retry/reconciliation settings, client status authorization and retention.
+- Implement [result delivery and acknowledgment](result-delivery.md) through the
+  default internal call. Finalize retry/reconciliation settings, client status
+  authorization and retention; defer separate-service transport details.
 - Move eligibility, Cognito enrollment and grants/session code to the host side;
   remove their permissions and integration requirements from the verifier.
 - Add shared assertion validation and host acceptance contracts; keep signing
