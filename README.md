@@ -12,4 +12,4 @@ See the [design plan and diagrams](docs/verification-only-plan.md) for:
 
 The host generates a random nonce tied to its pending operation; the verifier adds its own transaction ID. Both are covered by the signed result. The host validates the result and consumes the operation once.
 
-This repository is the planned successor for the verification-only responsibilities currently implemented in [go.apexfission.aws.verifyemail](https://github.com/lambdawalker/go.apexfission.aws.verifyemail). Signing format, key management, and delivery contracts remain open design decisions.
+This repository is the planned successor for the verification-only responsibilities currently implemented in [go.apexfission.aws.verifyemail](https://github.com/lambdawalker/go.apexfission.aws.verifyemail). The design is organized into focused documents covering architecture, assertions, key management, operations, and security. Remaining decisions are tracked in [implementation decisions](docs/design/implementation.md).
