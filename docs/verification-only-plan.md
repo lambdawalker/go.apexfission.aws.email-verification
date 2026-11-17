@@ -57,7 +57,7 @@ sequenceDiagram
     V-->>H: Transaction ID
     H-->>C: Verification pending
     M-->>C: User opens link or enters code
-    C->>V: Confirm transaction with A+B or A+C; A required
+    C->>V: Confirm transaction with A+B or A+C (A required)
     V->>V: Validate proofs and claim confirmation once
     V-->>H: Signed result through trusted handoff
     H->>H: Validate and accept matching operation once
