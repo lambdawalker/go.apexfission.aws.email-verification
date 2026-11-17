@@ -16,6 +16,7 @@ its final repository location is still to be decided.
 | --- | --- |
 | [Architecture and verification flow](design/architecture.md) | Core design |
 | [Verification initiation](design/initiation.md) | Authorized start, idempotency and delivery diagrams |
+| [Confirmation and recoverable issuance](design/confirmation.md) | Atomic proof consumption and signing recovery |
 | [Assertions and acceptance timing](design/assertions.md) | Core design |
 | [Signing and key distribution](design/keys/signing-and-distribution.md) | Key management |
 | [Cache policy and operational alerts](design/operations/cache-and-alerts.md) | Host operations |
@@ -28,8 +29,9 @@ its final repository location is still to be decided.
 ## Next discussion
 
 Authorized initiation and start idempotency are recorded in [Verification initiation](design/initiation.md).
-Next: confirmation and recoverable result-delivery contracts; resolve the remaining
-initiation implementation details listed there.
+Confirmation and durable issuance are recorded in [Confirmation](design/confirmation.md).
+Next: trusted result delivery, host acknowledgment and client completion; resolve
+remaining initiation and confirmation implementation details in those documents.
 Host-owned durable rollback storage and atomic concurrent updates are decided;
 exact digest representation and retry bounds remain implementation details.
 Per-key and revocation fields are decided.
