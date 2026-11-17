@@ -544,7 +544,7 @@ For routine retirement, retain active verification access through the last
 old-key assertion expiration plus configured clock tolerance, then stop accepting
 that key. Retain its archived public record afterward. Revocation due to compromise
 takes precedence over ordinary overlap. Retired private KMS-key retention/deletion
-remains a separate open policy.
+follows the three-month policy below.
 
 #### Explicitly accepted first-draft risks and limits
 
@@ -651,10 +651,38 @@ host may use its existing background-work mechanism. Previously accepted work
 is subject to this incident policy, rather than blindly continuing a grant after
 the host knows its supporting key was revoked.
 
+### Retired KMS-key retention
+
+Decision: retain a retired signing key in KMS for three calendar months after
+the end of its authorized signing period (or earlier emergency retirement).
+This is a deployment-controlled retention setting, distinct from the one-year
+signing period, assertion acceptance overlap and indefinite public-key archive.
+Use UTC calendar-month arithmetic, clamping to the last day of the destination
+month when needed.
+
+Stop new signing at retirement. For routine rotation, preserve public-key
+retrieval through the required assertion overlap, with signing permission removed;
+then disable the KMS key. Confirm the public key and signed historical record
+have been archived before disabling/deleting the resource. On compromise, disable
+affected signing immediately; the ordinary overlap does not justify continued
+acceptance of revoked keys.
+
+After the three-month retention period, schedule KMS deletion. AWS requires an
+additional 7–30-day deletion waiting period (default 30 days), so this policy
+means three months before scheduling, not guaranteed physical deletion exactly
+at three months. Configure that waiting period within AWS's allowed range and
+record the actual scheduled deletion time. Retention never permits automatic
+reactivation of a retired or revoked signing key.
+
+Retain the immutable S3 public-key record, signature and lifecycle/revocation
+metadata indefinitely after KMS deletion. No private key is exported to S3.
+Historical storage never restores active trust.
+
+Reference: [AWS KMS key deletion](https://docs.aws.amazon.com/kms/latest/developerguide/deleting-keys.html).
+
 ### Decisions still open for this item
 
 - Exact S3 immutability controls and signed-record serialization/profile.
-- Retired private KMS-key retention/deletion policy.
 - Key-status wire schema, companion endpoint path, and concrete freshness/rollback checks.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
