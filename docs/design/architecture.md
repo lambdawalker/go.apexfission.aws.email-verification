@@ -34,6 +34,15 @@ Library and host may live in different repositories while sharing this runtime.
 Independent services or Lambdas introduce a transport boundary even within one
 project. Elaborate that future variant in [Separate deployment](separate-deployment.md).
 
+## Storage default
+
+Use separate verifier-owned and host-owned DynamoDB on-demand tables in the
+default deployment. The host provisions both; each component manages its own
+records. The verifier keeps results for reliable handoff and recovery; the host
+owns accepted evidence and its longer-term retention. See
+[Storage ownership](storage-ownership.md) for the ownership table and diagram.
+Other host databases remain possible through compatible storage contracts.
+
 ## Responsibility boundary
 
 ```mermaid
