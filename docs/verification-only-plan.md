@@ -225,3 +225,8 @@ The draft now includes [Composer integration](design/composer-integration.md):
 a versioned infrastructure contract, separate Pulumi module, deployment timing
 gate, host composition example and ownership diagrams. This provisions verifier
 storage/signing only; see the implementation status for remaining production work.
+
+## Isolated end-to-end testing
+
+See [the internal test host](design/test-host.md) for its separate AWS stack,
+private Go package boundary, test client and email-to-acceptance diagrams.

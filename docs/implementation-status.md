@@ -102,3 +102,11 @@ flowchart TD
 [Composer integration](design/composer-integration.md) adds a versioned feature
 contract, validated configuration inventory, isolated Pulumi module, ownership
 labels and native composition tests. Host storage and runtime remain parent-owned.
+
+## Isolated test host
+
+[Test-host implementation](design/test-host.md) now wires SES, a resumable scan
+worker, pinned KMS trust and durable acceptance into a separate deployable test
+stack. This is a low-volume operator harness, not the production scheduler,
+archive/revocation protocol or user-facing application. No live AWS run was
+performed. Host progress has a read-only backend API for IAM-authenticated callers.

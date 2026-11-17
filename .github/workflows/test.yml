@@ -17,6 +17,9 @@ jobs:
       - run: go run ./cmd/demo
 
       - run: go run ./examples/composed
+      - run: bash scripts/testhost-import-test.sh
+      - run: bash scripts/testhost-build.sh
+      - run: python3 scripts/testhost-client.py --help
   infrastructure:
     runs-on: ubuntu-latest
     steps:

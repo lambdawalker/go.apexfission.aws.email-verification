@@ -7,6 +7,7 @@ require (
 	github.com/lambdawalker/go.infra.composer v0.0.0-20261103235125-ad4cfd268616
 	github.com/lambdawalker/go.infra.composer/adapters/pulumi v0.0.0-20261103235125-ad4cfd268616
 	github.com/pulumi/pulumi-aws/sdk/v6 v6.83.4
+	github.com/pulumi/pulumi-random/sdk/v4 v4.18.2
 	github.com/pulumi/pulumi/sdk/v3 v3.273.0
 )
 

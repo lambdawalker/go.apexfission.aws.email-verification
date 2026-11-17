@@ -46,3 +46,13 @@ func (h *Host) Status(ctx context.Context, host, op, token string) (Progress, er
 	}
 	return Progress{o.Accepted != "", o.WorkPending, o.Blocked}, nil
 }
+
+// ProgressForHost returns progress to an already authorized backend caller.
+// Hosts must check caller ownership before exposing it through any client API.
+func (h *Host) ProgressForHost(ctx context.Context, host, op string) (Progress, error) {
+	o, _, e := read[Operation](ctx, h.store, key(host, op))
+	if e != nil {
+		return Progress{}, e
+	}
+	return Progress{o.Accepted != "", o.WorkPending, o.Blocked}, nil
+}

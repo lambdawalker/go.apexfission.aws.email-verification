@@ -69,3 +69,10 @@ See [Composer integration](docs/design/composer-integration.md) for the versione
 feature contract, native Pulumi module, host ownership and diagrams.
 Run `go run ./examples/composed` for an offline composition plan.
 The optional `infrastructure` module requires Go 1.27.3+; the runtime stays on Go 1.25.
+
+## Isolated test host
+
+The [test-host guide](docs/design/test-host.md) covers a private, IAM-only Lambda
+host, its separate Composer stack, SES email, background worker, deployment
+commands and diagrams. Its implementation lives under `internal`; other apps
+continue importing the public library. No public endpoint is created.
