@@ -183,3 +183,18 @@ Acceptance checks must include malformed/noncanonical IDs, mismatched email
 strings, missing/unsupported versions, and harmless informational additions that
 leave all required checks intact.
 
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ A["Received assertion"] --> S{"Schema, type and algorithm valid?"}
+ S -->|No| R["Reject"]
+ S -->|Yes| K{"Signature and current key trust valid?"}
+ K -->|No| R
+ K -->|Yes| B{"Issuer, audience and request bindings match?"}
+ B -->|No| R
+ B -->|Yes| T{"All assertion, key and host deadlines satisfied?"}
+ T -->|No| R
+ T -->|Yes| C["Atomically accept pending operation once"]
+```
