@@ -71,8 +71,9 @@ implemented. These choices are explicit and configurable for review.
 - Host business-work execution and outcomes, status-cookie/HTTP authorization,
   credential recovery and revocation. WorkPending is a durable marker, not an
   account provisioning implementation.
-- Infrastructure provisioning, IAM least privilege, monitoring/alerts, integration
-  with the deployment framework, and live AWS tests. Preflight provides a gate but
+- Remaining infrastructure provisioning, IAM least privilege, monitoring/alerts
+  and live AWS tests. Composer integration now provisions verifier storage/signing,
+  but does not provision the complete production service. Preflight provides a gate but
   does not automatically instrument deployment commands outside this repository.
 - Additional independent cryptographic interoperability and adversarial review.
 
@@ -95,3 +96,9 @@ flowchart TD
     R --> A["Host acceptance and work marker"]
     A --> K["Verifier acknowledgment and cleanup boundary"]
 ```
+
+## Composer integration
+
+[Composer integration](design/composer-integration.md) adds a versioned feature
+contract, validated configuration inventory, isolated Pulumi module, ownership
+labels and native composition tests. Host storage and runtime remain parent-owned.

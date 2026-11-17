@@ -1,0 +1,3 @@
+name: verification-example
+runtime: go
+description: Storage and signing infrastructure only; not a complete verification service.

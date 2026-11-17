@@ -57,7 +57,15 @@ bash scripts/preflight.sh effective-config.json your-deployment-command args
 The command is invoked only after validation succeeds. JSON values are integer
 seconds and overlay documented defaults; unknown, duplicate and null fields are
 rejected. Environment overrides must be materialized into that effective JSON
-before this gate. No cloud deployment command or AWS resources are created here.
+before this gate. This wrapper itself creates no AWS resources. The optional Composer/Pulumi module
+provides verifier storage and signing resources.
 
 The pipeline runs tests, race detection, vet and default configuration validation.
 Host deployments must use the gate and the same constructor/startup validation.
+
+## Larger-project composition
+
+See [Composer integration](docs/design/composer-integration.md) for the versioned
+feature contract, native Pulumi module, host ownership and diagrams.
+Run `go run ./examples/composed` for an offline composition plan.
+The optional `infrastructure` module requires Go 1.27.3+; the runtime stays on Go 1.25.
