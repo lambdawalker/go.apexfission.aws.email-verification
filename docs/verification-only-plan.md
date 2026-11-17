@@ -1,6 +1,8 @@
 # Plan: verification-only email module
 
-Status: planned architecture from our design discussion; not implemented.
+Status: target architecture from our design discussion. An initial executable core
+is available; see [implementation status](implementation-status.md) for what is
+implemented and what remains before production.
 The existing implementation in [go.apexfission.aws.verifyemail](https://github.com/lambdawalker/go.apexfission.aws.verifyemail) still checks Cognito eligibility, creates users,
 and requests sessions. This new repository will implement the verification-only boundary.
 
