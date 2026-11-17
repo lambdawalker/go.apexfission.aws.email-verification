@@ -89,19 +89,14 @@ The host owns long-term retention of evidence and links to effects it authorized
 A verifier cleanup deadline must not delete host acceptance or remediation records.
 Keep unresolved outcomes distinguishable from confirmed failure or acceptance.
 
-## Retention and retry decisions still pending
+## Retry and retention contract
 
-The previously discussed twenty-attempt retry limit, one-to-thirty-second backoff,
-twenty-four-hour reconciliation window, and seven-day operational retention are
-proposals, not finalized defaults in this document. Any short verifier operational
-retention must be scoped to eligible records, not applied to host evidence or
-permanent revocation history.
-
-Before deleting idempotency records, define how requests outside their retry
-window are rejected instead of becoming new transactions after cleanup. Also
-finalize proof-secret cleanup, unresolved-case retention, host evidence policy,
-and backup retention. No cleanup or database migration is performed by this
-documentation change.
+[Retry, retention and timing validation](retry-retention-validation.md) selects
+five total automatic attempts and a forty-eight-hour baseline after resolution
+for eligible verifier records. Cleanup must preserve all duplicate-prevention
+windows and exclude unresolved outcomes. Missing records must not recreate work.
+Executable deployment and startup timing validation is required before shipping.
+Start-validity duration, recovery handshake and exact backoff remain open.
 
 ## Rationale and alternatives
 
