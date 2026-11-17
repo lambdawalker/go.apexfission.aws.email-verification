@@ -144,28 +144,78 @@ Every acceptance still requires signature, issuer, audience, timing and operatio
 binding checks. Retiring does not authorize new signing. Revocation is permanent
 and overrides any conflicting lifecycle state; never reuse a revoked key ID.
 
-Proposed default locations are `trust/key-status.json` in a configured S3 bucket
+Selected default locations are `trust/key-status.json` in a configured S3 bucket
 and `/verification/key-status.json` alongside the HTTPS JWKS endpoint. Locations
 are configured trusted sources, not selected by an incoming assertion. Only the
 separate administrative/publishing role can update status; the verifier runtime
-cannot do so. Exact delivery and freshness contracts remain the next design step.
+cannot do so. The retrieval and freshness contract is defined below.
 
 Rollback protection must preserve the highest revision seen and learned
 revocations across Lambda restarts. Reject lower revisions, conflicting content
 at the same revision, and attempts to restore a revoked key. Durable storage,
-concurrent updates, initial bootstrap and content-comparison rules still need
+concurrent updates and content-comparison rules still need
 concrete contracts; an in-memory cache alone is insufficient.
 
 An unchanged document can remain authoritative. A successful check against the
 authoritative source refreshes cache age; `updated_at` remains the last change
-time. An old intermediary response must not reset freshness. Define how each
-retrieval route proves a successful authoritative check before implementation,
-using the existing refresh, cooldown and maximum-age limits.
+time. An old intermediary response must not reset freshness. Both routes follow the
+retrieval contract below and the existing refresh, cooldown and maximum-age limits.
+
+### Retrieval and freshness contract
+
+Decision: keep caching in the host validator. Every refresh must reach the current
+authoritative S3 key-status object. Both routes return the complete document in
+the first version; conditional requests and 304 handling are deferred.
+
+| Route | Required behavior |
+| --- | --- |
+| Direct AWS | Read current `trust/key-status.json` from the configured source bucket using the AWS SDK. Do not pin this updateable status object to an old S3 version. |
+| HTTPS | Serve `/verification/key-status.json` by reading that same source object for every refresh request. Disable CDN/API response caching and endpoint-local status caching. Return `Cache-Control: no-store`; do not serve stale origin responses on failure. |
+| Host validator | Cache validated trust information under the existing 300-second refresh, 30-second cooldown and 900-second maximum-age policy. |
+
+The configured source and issuer establish trust; do not use token-provided
+locations or silently fall back to an older replica. Authenticate AWS access and
+validate HTTPS server identity. These checks rely on the trusted publishing
+infrastructure, not a cryptographic proof that the source has never been compromised.
+
+A refresh succeeds only after the host:
+1. Obtains a complete response through its configured authoritative route.
+2. Validates schema, issuer and key/status consistency.
+3. Compares the revision and content with durable host trust state.
+4. Rejects lower revisions, conflicting content at the same revision, or attempts
+   to restore known revoked keys.
+5. Durably saves the accepted revision and learned revocations before using the
+   updated trust information.
+
+Concurrent refreshes must not roll durable state backward. A validation or
+persistence failure is not a successful refresh and must not reset cache age.
+Known revocations never receive an outage allowance.
+
+An unchanged revision with identical content is a valid refresh when the
+authoritative source was just checked. `updated_at` remains the last status-change
+time; it is not the cache freshness timestamp. Cache hits and old intermediary
+responses cannot renew freshness. Keep network operations bounded and account
+for retrieval elapsed time conservatively.
+
+On refresh failure, already-known trusted keys may remain usable only within the
+existing maximum age and all assertion checks. Unknown or known-revoked keys
+remain rejected. At the maximum age, block new acceptance with a distinct retryable
+availability error and emit the configured operational alert. No cache means
+immediate blocking when retrieval fails.
+
+A new host has no prior revision for comparison. Initial trust comes from its
+configured AWS/HTTPS source; durable revision and revocation tracking protects
+subsequent refreshes across restarts. Resetting that durable state loses this
+history and must not be a routine error-recovery mechanism. Detailed durable
+storage, concurrency and content-comparison mechanics remain to be specified.
+
+References: [S3 consistency](https://aws.amazon.com/s3/consistency/)
+and [HTTP caching](https://www.rfc-editor.org/rfc/rfc9111.html).
 
 ### Decisions still open for this item
 
 - Initial trust provisioning and detailed publication/recovery contracts; the signed-record format and S3 legal-hold protection are decided.
-- Detailed nested key-entry schema, retrieval/freshness contract, and durable rollback enforcement. Top-level fields and lifecycle states are decided; default locations are proposed.
+- Detailed nested key-entry schema and durable rollback enforcement mechanics. Top-level fields, lifecycle states, default locations and retrieval/freshness behavior are decided.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
 [JWT validation guidance (RFC 8725)](https://www.rfc-editor.org/rfc/rfc8725.html),
