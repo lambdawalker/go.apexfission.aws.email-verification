@@ -25,3 +25,16 @@ handoff when separated. No AWS deployment, proof-key rotation or data migration
 is part of this documentation change.
 
 
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ C["Remaining service contracts"] --> I["Authorized initiation"]
+ C --> D["Result delivery and crash recovery"]
+ I --> V["Verifier implementation"]
+ D --> V
+ H["Host validation and durable trust store"] --> A["Host acceptance and durable work"]
+ V --> A
+ A --> T["Race, replay and recovery acceptance tests"]
+```
