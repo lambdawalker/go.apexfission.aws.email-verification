@@ -127,7 +127,7 @@ and retry mechanism is still to be designed.
 ## Assertion schema, signing, and trusted keys
 
 Status: initial design baseline from our discussion; not implemented. Exact field
-names below are proposed contract names. Signing algorithm and operational timing
+names below are proposed contract names. ES256 is selected for the first version; operational timing
 values remain open.
 
 ### Format and initial schema
@@ -159,7 +159,7 @@ Do not include A, B, C, their secret values, or session credentials in the asser
 | Protected header | Initial rule |
 | --- | --- |
 | `typ` | Require a distinct assertion type; proposed value `email-verification+jwt` is a local profile choice, not a registered type claim. |
-| `alg` | Require the configured asymmetric signing algorithm; exact algorithm remains undecided. Reject `none` and algorithms outside the configured allowlist. |
+| `alg` | Require `ES256` for the first version. Reject `none` and every other algorithm; bind each trusted key to its configured algorithm. |
 | `kid` | Stable unique identifier for the specific signing key in the trusted key set; never reuse it for a replacement key. |
 
 Validate types, required fields, signature, issuer, audience, request bindings,
@@ -175,6 +175,51 @@ the verification identity, `jti`, bindings, verification time, and original
 expiration; retrying must not renew the acceptance window. The host still
 atomically consumes its pending operation and records durable follow-up work.
 A signature provides integrity, not confidentiality or automatic single use.
+
+### Selected signing algorithm: ES256
+
+Decision: use ES256 (ECDSA with NIST P-256 and SHA-256) for the first version.
+
+| Setting | Value |
+| --- | --- |
+| JWT protected header `alg` | `ES256` |
+| AWS KMS key specification | `ECC_NIST_P256` |
+| AWS KMS key usage | `SIGN_VERIFY` |
+| AWS KMS signing algorithm | `ECDSA_SHA_256` |
+| Public JWK | `kty: EC`, `crv: P-256`, `alg: ES256`, `use: sig`, unique `kid`, public `x` and `y` |
+
+The rationale is compact signatures and compatibility with our KMS/JWT design.
+NIST FIPS 186-5 specifies ECDSA, and SP 800-57 Part 1 Rev. 5 places
+256-bit elliptic-curve keys at approximately 128-bit classical security strength,
+comparable to 3072-bit RSA. This is our engineering selection, not a NIST mandate
+for email verification or a claim of whole-system NIST/FIPS compliance.
+
+The signing adapter must sign the exact JWS signing input. If it sends a SHA-256
+digest to KMS, use `MessageType: DIGEST` to avoid hashing twice. Convert the KMS
+DER-encoded ECDSA signature to the JWS fixed-width 64-byte `R || S` representation
+(two unsigned 32-byte integers) before base64url encoding. Test interoperability
+with an independent JWT verifier and rejection of malformed signatures and
+unexpected algorithms. Deduplicate by the bound request and assertion ID, not by
+signature bytes.
+
+### Future TODO: quantum-resistant signatures
+
+- [ ] Evaluate a migration to NIST-standardized post-quantum digital signatures.
+  ES256/P-256 is not quantum-resistant; short assertion lifetimes do not make the
+  signing algorithm quantum-resistant.
+- [ ] Review applicable NIST transition guidance, AWS KMS support, JOSE/JWT
+  interoperability, library support, and signature-size/latency costs when planning
+  that migration. No post-quantum algorithm or migration date is selected yet.
+- [ ] Design a controlled rollout with new key IDs, explicit algorithm/key bindings,
+  compatible consumers deployed before signer cutover, and a bounded transition
+  policy. Never broaden accepted algorithms based solely on an incoming token.
+- [ ] Test downgrade rejection and retirement of the old algorithm. Ordinary
+  rotation to another P-256 key does not provide quantum resistance.
+
+References: [NIST FIPS 186-5](https://csrc.nist.gov/pubs/fips/186-5/final),
+[NIST SP 800-57 Part 1 Rev. 5](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r5.pdf),
+[JWA ES256 (RFC 7518)](https://www.rfc-editor.org/rfc/rfc7518.html),
+and [AWS KMS Sign](https://docs.aws.amazon.com/kms/latest/APIReference/API_Sign.html).
 
 ### AWS signing and public-key distribution
 
@@ -219,7 +264,6 @@ does not revoke signatures validated with a downloaded public key.
 
 ### Decisions still open for this item
 
-- Signing algorithm and KMS key specification.
 - Final assertion type, ID encoding, email comparison rules, and schema evolution.
 - Assertion lifetime, maximum verification age, and clock tolerance.
 - Rotation cadence, cache/refresh limits, propagation checks, and old-key retention.
@@ -234,7 +278,7 @@ and [KMS rotation](https://docs.aws.amazon.com/kms/latest/developerguide/rotate-
 
 - Finalize the remaining choices in [Assertion schema, signing, and trusted keys](#assertion-schema-signing-and-trusted-keys).
   The initial fields, signed JWT/JWS format, AWS KMS approach, and proposed JWKS
-  route are recorded there; algorithm and operational timing values remain open.
+  route and ES256 selection are recorded there; operational timing values remain open.
 - Define direct-call and separate-Lambda contracts, including authorized initiation,
   result delivery, recovery and client completion behavior.
 - Move eligibility, Cognito enrollment and grants/session code to the host side;
