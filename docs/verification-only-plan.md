@@ -26,7 +26,8 @@ its final repository location is still to be decided.
 
 ## Next discussion
 
-Finalize nested key-entry fields and durable rollback enforcement mechanics.
+Finalize durable rollback enforcement: host storage, concurrent updates and
+content comparison. Per-key and revocation fields are decided.
 The retrieval routes and freshness policy are decided. See [key lifecycle and revocation](design/keys/lifecycle-and-revocation.md)
 and [implementation decisions](design/implementation.md).
 
