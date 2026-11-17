@@ -28,7 +28,8 @@ revoked keys are never accepted through the stale-cache allowance.
 Refreshing KMS public-key bytes alone is not an authoritative refresh of the
 application's allowed-key set. The direct AWS adapter needs a trusted, refreshable
 source for allowed kid-to-immutable-ARN mappings and retirement/revocation state.
-Use the authoritative S3 key-status document and emergency procedure below. The
+Use the [authoritative S3 key-status retrieval contract](../keys/lifecycle-and-revocation.md#retrieval-and-freshness-contract)
+and the emergency procedure in that document. The
 HTTPS route must likewise refresh the authoritative published trust set, accounting
 for upstream caches rather than treating an old response as new trust information.
 
