@@ -3,7 +3,8 @@
 [Design overview](../verification-only-plan.md)
 
 Status: agreed initiation design; not implemented. Field names below are proposed
-wire names. Confirmation and recoverable result delivery remain to be finalized.
+wire names. [Confirmation and recoverable issuance](confirmation.md) are recorded
+separately; trusted result delivery remains to be finalized.
 
 ## Authorized start
 
@@ -112,7 +113,7 @@ or extend proof expiry to handle that uncertainty.
 - Durable email-job payload protection and retry behavior: proof hashes alone
   cannot reconstruct the original email secrets for a later send.
 - Exact delivery-state model and handling of provider uncertainty.
-- Confirmation contract and recovery around proof consumption and signing.
+- Finalize implementation details in the agreed [confirmation contract](confirmation.md).
 - Result delivery and authorized result retrieval, preserving the original
   assertion identity, bindings, verification time and expiration.
 
