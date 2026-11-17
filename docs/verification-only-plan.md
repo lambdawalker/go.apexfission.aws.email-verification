@@ -495,6 +495,77 @@ for the scheduled interval. Short assertion lifetimes do not prevent a compromis
 signing key from creating fresh assertions. Public-key acceptance overlap and
 retired KMS-key deletion are separate policies.
 
+### Publication readiness and consumer responsibility
+
+Decision: publish the replacement public key seven days before its planned
+activation; make this lead time deployment-configurable. Continue signing with
+the current authorized key until cutover. Confirm publication and retrieval
+through each enabled supported route. These checks cover our publication, not
+propagation into consumer caches. No consumer acknowledgment is required.
+
+Consumers own cache refresh and assertion validation. An unfamiliar `kid`
+triggers a bounded refresh from the preconfigured trusted source, subject to the
+cooldown and outage policy. Never accept an unresolved or unauthorized key.
+The imported validator module implements these responsibilities on the host's
+behalf. Waiting a week does not establish that every consumer has refreshed.
+Publication failure pauses cutover and raises an alert; it does not silently
+extend the old key's authorized signing period.
+
+### First-draft public-key archive and signed records
+
+Decision: retain historical public keys and their metadata indefinitely in S3.
+Use immutable, version-specific records rather than overwriting an existing key
+record. The publication implementation must enforce this property with storage
+controls and restricted write/delete permissions; a unique object name or S3
+Versioning alone is not a guarantee of immutability. Select and document the
+precise retention/immutability controls before implementation.
+
+Store each public key as a JWK in a signed record binding its `kid`, issuer,
+algorithm, immutable KMS key ARN, creation time, planned activation time, record
+schema/version, and the signing key's identifier. Sign the exact serialized record
+using the current assertion-signing private key in KMS. For routine replacement,
+the currently authorized key signs the new key's record before cutover. Keep the
+signature with the record, using an explicitly typed signed-record format distinct
+from email-verification assertions; neither validator may accept the other type.
+The serialization/profile details remain to be specified.
+
+This first draft deliberately does not introduce a separate key-management signing
+key. Consumers must already trust the record signer through trusted configuration
+or an authenticated established trust path. A signer public key supplied only
+inside the same record cannot establish authenticity. Initial trust provisioning
+must be documented; self-signing the initial record alone does not establish trust.
+
+An immutable archive records historical facts, not perpetual authorization.
+Maintain current acceptance/retirement/revocation state separately through the
+authoritative trust source. Archive records never override that state. A valid
+record signature does not prove that a key is currently authorized or that a
+downloaded trust view is fresh; enforce the freshness and revocation policies.
+For routine retirement, retain active verification access through the last
+old-key assertion expiration plus configured clock tolerance, then stop accepting
+that key. Retain its archived public record afterward. Revocation due to compromise
+takes precedence over ordinary overlap. Retired private KMS-key retention/deletion
+remains a separate open policy.
+
+#### Explicitly accepted first-draft risks and limits
+
+- Compromise of the current private signing key, or unauthorized use of its KMS
+  signing permission, can produce forged assertions and convincingly signed fake
+  replacement-key records. Signing records with that same key does not contain
+  this compromise or make recovery through that key trustworthy.
+- An attacker who can publish a forged record and influence the trusted key
+  mapping may extend the compromise into future keys. Storage access restrictions
+  and signer authorization remain essential; the record signature is additional
+  evidence, not a replacement for those controls.
+- Legitimately signed old records can be replayed. Historical signature validity
+  must never re-enable a retired/revoked key or reset trust-information freshness.
+- Emergency recovery requires an independently authenticated administrative
+  update of trust configuration; do not rely solely on authorization signed by
+  the compromised key. Its exact distribution procedure remains open.
+- Immutability preserves what was written, including any malicious record written
+  by an authorized attacker. It does not prove the original record was legitimate.
+- A separate key-management authority remains a possible future enhancement,
+  not a first-draft requirement.
+
 ### Rotation lifecycle
 
 KMS automatic rotation does not cover asymmetric signing keys. Our deployment or
@@ -502,7 +573,8 @@ rotation workflow will orchestrate replacement keys:
 
 1. Create a new asymmetric KMS key with a new key identifier.
 2. Publish its public JWK alongside the existing public key.
-3. Allow consumers to receive the new key before switching signing to it.
+3. Publish seven days before cutover and confirm publication readiness; consumers
+   own refresh and no consumer acknowledgment is required.
 4. Stop signing with the old key, retaining its public key until all assertions
    signed with it expire, including allowed clock tolerance.
 5. Retire the old key under a defined retention policy.
@@ -515,7 +587,8 @@ does not revoke signatures validated with a downloaded public key.
 
 ### Decisions still open for this item
 
-- Propagation checks and old-key retention.
+- Exact S3 immutability controls and signed-record serialization/profile.
+- Retired private KMS-key retention/deletion policy.
 - Emergency revocation distribution and recovery behavior.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
