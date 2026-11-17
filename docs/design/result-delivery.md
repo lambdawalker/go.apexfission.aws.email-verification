@@ -122,7 +122,9 @@ pending delivery work.
 
 The client obtains progress and completion from the host under authorization
 bound to its original operation/session. A transaction identifier alone is
-insufficient. Keep these milestones distinct:
+insufficient. Use the agreed [client status authorization](client-status.md)
+contract: an authorized host session or a read-only operation-scoped token.
+Keep these milestones distinct:
 
 | Milestone | Meaning |
 | --- | --- |
@@ -145,6 +147,6 @@ Verify retries neither renew evidence nor duplicate durable host work.
 ## Remaining decisions
 
 Specify service authentication, exact delivery/acknowledgment fields and errors,
-retry/backoff limits, reconciliation routes, client status authorization and
-transport, and retention of results, acceptance records and deduplication evidence.
+retry/backoff limits, reconciliation routes, remaining client status credential
+and transport details from [Client status authorization](client-status.md), and retention of results, acceptance records and deduplication evidence.
 These details must preserve the agreed semantics above.
