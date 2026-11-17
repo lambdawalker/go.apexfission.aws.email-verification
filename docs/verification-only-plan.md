@@ -407,6 +407,17 @@ a trusted key or arbitrary key-fetch URL. Protect publication permissions and us
 HTTPS for the endpoint. Cache policy and bounded refresh behavior remain to be
 defined.
 
+### Rotation cadence
+
+Decision: configure `signing_key_rotation_interval_days` with a default of 365 days
+(one year), measured from activation for signing. Prepare and publish replacement
+keys before that deadline so signing can switch on time. This is our operational
+policy, not an automatic expiration property of the key or KMS automatic rotation.
+Suspected compromise triggers emergency replacement and revocation without waiting
+for the scheduled interval. Short assertion lifetimes do not prevent a compromised
+signing key from creating fresh assertions. Public-key acceptance overlap and
+retired KMS-key deletion are separate policies.
+
 ### Rotation lifecycle
 
 KMS automatic rotation does not cover asymmetric signing keys. Our deployment or
@@ -427,7 +438,7 @@ does not revoke signatures validated with a downloaded public key.
 
 ### Decisions still open for this item
 
-- Rotation cadence, cache/refresh limits, propagation checks, and old-key retention.
+- Cache/refresh limits, propagation checks, and old-key retention.
 - Emergency revocation distribution and recovery behavior.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
