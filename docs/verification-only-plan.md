@@ -27,6 +27,7 @@ result cleanup boundaries and adapter flexibility.
 | --- | --- |
 | [Architecture and verification flow](design/architecture.md) | Core design |
 | [Storage ownership and default database](design/storage-ownership.md) | Separate DynamoDB tables and retention responsibilities |
+| [Retry, retention and timing validation](design/retry-retention-validation.md) | Five attempts, safe cleanup and required deployment checks |
 | [Verification initiation](design/initiation.md) | Authorized start, idempotency and delivery diagrams |
 | [Confirmation and recoverable issuance](design/confirmation.md) | Atomic proof consumption and signing recovery |
 | [Result delivery and acknowledgment](design/result-delivery.md) | Trusted handoff, duplicate delivery and client completion |
@@ -46,8 +47,10 @@ Authorized initiation and start idempotency are recorded in [Verification initia
 Confirmation and durable issuance are recorded in [Confirmation](design/confirmation.md).
 Trusted result delivery, acknowledgment and client completion ownership are recorded
 in [Result delivery](design/result-delivery.md). The default is in-process library integration. [Client status authorization](design/client-status.md) now records the read-only
-operation token and thirty-minute default. Next: retry settings and retention,
-then remaining response fields and credential implementation details. Service-to-service
+operation token and thirty-minute default. [Retry and retention](design/retry-retention-validation.md) now select five total
+attempts and forty-eight hours after resolution, gated by duplicate-prevention
+safety and executable configuration validation. Next: start-authorization validity
+and missing-record recovery, then remaining timing and wire-contract details. Service-to-service
 authentication details are deferred to the separate-deployment document.
 Host-owned durable rollback storage and atomic concurrent updates are decided;
 exact digest representation and retry bounds remain implementation details.
