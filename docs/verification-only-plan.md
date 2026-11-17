@@ -513,12 +513,32 @@ extend the old key's authorized signing period.
 
 ### First-draft public-key archive and signed records
 
-Decision: retain historical public keys and their metadata indefinitely in S3.
-Use immutable, version-specific records rather than overwriting an existing key
-record. The publication implementation must enforce this property with storage
-controls and restricted write/delete permissions; a unique object name or S3
-Versioning alone is not a guarantee of immutability. Select and document the
-precise retention/immutability controls before implementation.
+Decision: retain historical public keys and their metadata indefinitely in S3,
+using S3 Object Lock legal holds on version-specific archive records. Enable
+Object Lock and Versioning on the archive bucket. No timed Governance or
+Compliance retention is required for this first draft.
+
+- Apply legal hold ON when uploading each signed record and verify protection
+  before advertising the record as published. Failed protection checks fail
+  publication and emit an operational alert.
+- The publishing role may create protected records but must not remove holds;
+  enforce ON-only hold-setting permissions. The verifier runtime has no archive
+  mutation permissions. Neither role may delete archive versions.
+- Reserve hold removal for a separate administrative role, with audited,
+  exceptional use. Routine retirement, revocation and KMS deletion never remove
+  holds or delete public history.
+- Record and retrieve the exact bucket, object key and S3 version ID. Object
+  Lock protects that version; it does not prevent a newer version under the same
+  name or a delete marker. Do not resolve historical records by latest version.
+- Keep the authoritative current key-status document separately updateable.
+  Revocation changes current trust without modifying historical records.
+- Legal holds have no expiration but can be removed by an authorized
+  administrator. This is indefinite protection with an administrative escape,
+  not irreversible retention. Signatures and trust-status validation remain
+  necessary; storage protection does not establish authenticity.
+
+Reference: [S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html).
+This is a recorded design decision, not an AWS deployment.
 
 Store each public key as a JWK in a signed record binding its `kid`, issuer,
 algorithm, immutable KMS key ARN, creation time, planned activation time, record
@@ -682,7 +702,7 @@ Reference: [AWS KMS key deletion](https://docs.aws.amazon.com/kms/latest/develop
 
 ### Decisions still open for this item
 
-- Exact S3 immutability controls and signed-record serialization/profile.
+- Exact signed-record serialization/profile; S3 legal-hold protection is decided.
 - Key-status wire schema, companion endpoint path, and concrete freshness/rollback checks.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
