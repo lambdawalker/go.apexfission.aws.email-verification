@@ -101,3 +101,18 @@ An incoming assertion may select a known key with `kid`; it must not introduce
 a trusted key or arbitrary key-fetch URL. Protect publication permissions and use
 HTTPS for the endpoint. Apply the cache policy below.
 
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ V["Verifier signing adapter"] --> K["KMS private signing key"]
+ K --> A["ES256 assertion"]
+ K --> P["Public key export"]
+ P --> W["HTTPS JWKS"]
+ P --> D["Direct AWS GetPublicKey"]
+ W --> H["Host local validator"]
+ D --> H
+ A --> H
+ S["Authoritative key status"] --> H
+```
