@@ -13,6 +13,13 @@ Use [separate DynamoDB on-demand tables](storage-ownership.md) for verifier and
 host records by default. Supply the DynamoDB adapter behind storage interfaces;
 keep host storage replaceable and cleanup scoped to its owning component.
 
+## Required timing validation
+
+Implement the [retry, retention and timing contract](retry-retention-validation.md),
+including a shared executable validator in deployment preflight, CI and startup.
+Unsafe effective configuration must block deployment before mutations and report
+field-specific errors. Documentation alone does not satisfy this requirement.
+
 ## Next implementation decisions
 
 - Finalize the remaining choices in [Assertion schema, signing, and trusted keys](../design/assertions.md#assertion-schema-signing-and-trusted-keys).
