@@ -2,6 +2,36 @@
 
 [Design overview](../verification-only-plan.md)
 
+## Default: imported library inside the host
+
+Decision: the host imports and runs the verifier library in its own process.
+Initiation and result handoff use trusted internal calls. Host code supplies the
+trusted caller/audience context; do not derive authorization from arbitrary
+client input. No additional service credential is needed for an in-process call.
+AWS resource access still requires the host runtime's configured permissions.
+
+Client-facing routes still enforce proof validation and operation authorization.
+For progress, use the host session where available; a short-lived, unguessable
+operation-scoped credential is the agreed direction for pre-account flows.
+Its exact issuance, storage, lifetime and revocation rules remain to be specified.
+
+```mermaid
+flowchart TD
+    C["Client"] --> R["Host routes and authorization"]
+    subgraph H["Host process"]
+        R --> V["Imported verifier library"]
+        V --> A["Host assertion validator and acceptance"]
+        A --> W["Durable host work"]
+    end
+    V --> P["Proof and result storage"]
+    V --> K["KMS and email adapters"]
+    A --> T["Host trust-state store"]
+```
+
+Library and host may live in different repositories while sharing this runtime.
+Independent services or Lambdas introduce a transport boundary even within one
+project. Elaborate that future variant in [Separate deployment](separate-deployment.md).
+
 ## Responsibility boundary
 
 ```mermaid
@@ -113,8 +143,8 @@ distributed exactly-once guarantee.
 
 The verifier also needs recoverable result issuance/delivery after successful
 confirmation: retrying delivery must preserve the same verification identity,
-never perform a new verification or authorize another operation. The persistence
-and retry mechanism is still to be designed.
+never perform a new verification or authorize another operation. See [confirmation](confirmation.md) and [result delivery](result-delivery.md)
+for the agreed durability and retry semantics; concrete mechanisms remain open.
 
 
 ## Host validation and storage boundary
