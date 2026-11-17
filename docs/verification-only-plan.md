@@ -26,8 +26,8 @@ its final repository location is still to be decided.
 
 ## Next discussion
 
-Finalize the authoritative key-status document schema, HTTPS endpoint, freshness
-and rollback checks. See [key lifecycle and revocation](design/keys/lifecycle-and-revocation.md)
+Finalize nested key-entry fields and durable rollback enforcement mechanics.
+The retrieval routes and freshness policy are decided. See [key lifecycle and revocation](design/keys/lifecycle-and-revocation.md)
 and [implementation decisions](design/implementation.md).
 
 ## Separate drafts and references
