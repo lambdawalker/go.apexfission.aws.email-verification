@@ -11,8 +11,9 @@
   start and idempotency. Finalize its transport, retention and delivery details.
 - Implement [confirmation and recoverable issuance](confirmation.md); finalize
   retry authorization, claim reservation and worker fencing.
-- Define result delivery, host acknowledgment and client completion contracts
-  for direct-call and separate-Lambda deployments.
+- Implement [result delivery and acknowledgment](result-delivery.md) for direct-call
+  and separate-service deployments; finalize authentication, wire contracts,
+  retry/reconciliation settings, client status authorization and retention.
 - Move eligibility, Cognito enrollment and grants/session code to the host side;
   remove their permissions and integration requirements from the verifier.
 - Add shared assertion validation and host acceptance contracts; keep signing
