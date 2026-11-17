@@ -116,3 +116,28 @@ confirmation: retrying delivery must preserve the same verification identity,
 never perform a new verification or authorize another operation. The persistence
 and retry mechanism is still to be designed.
 
+
+## Host validation and storage boundary
+
+```mermaid
+flowchart TD
+ subgraph Publisher["Verifier and publishing infrastructure"]
+ S["Current S3 key-status document"]
+ E["HTTPS status endpoint"]
+ S --> E
+ end
+ subgraph Host["Host runtime"]
+ V["Validation library"]
+ I["TrustStateStore interface"]
+ D["DynamoDB adapter"]
+ C["In-memory key and status cache"]
+ V --> I
+ I --> D
+ V <--> C
+ end
+ S -->|AWS SDK| V
+ E -->|HTTPS| V
+ D <--> T["Host-owned durable trust checkpoint"]
+```
+
+The store interface and adapter run inside the host. The verifier service has no access to the host database. The checkpoint is not a copy of the public-key archive.
