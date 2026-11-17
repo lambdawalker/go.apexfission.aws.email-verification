@@ -1,0 +1,34 @@
+name: Go validation
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test -race ./...
+      - run: bash scripts/preflight.sh config/examples/default.json
+      - run: bash scripts/preflight_test.sh
+      - run: go run ./cmd/demo
+
+      - run: go run ./examples/composed
+      - run: bash scripts/testhost-import-test.sh
+      - run: bash scripts/testhost-build.sh
+      - run: python3 scripts/testhost-client.py --help
+  infrastructure:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: infrastructure/go.mod
+          cache-dependency-path: infrastructure/go.sum
+      - run: go vet ./...
+        working-directory: infrastructure
+      - run: go test -race ./...
+        working-directory: infrastructure

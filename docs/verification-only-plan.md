@@ -1,6 +1,8 @@
 # Plan: verification-only email module
 
-Status: planned architecture from our design discussion; not implemented.
+Status: target architecture from our design discussion. An initial executable core
+is available; see [implementation status](implementation-status.md) for what is
+implemented and what remains before production.
 The existing implementation in [go.apexfission.aws.verifyemail](https://github.com/lambdawalker/go.apexfission.aws.verifyemail) still checks Cognito eligibility, creates users,
 and requests sessions. This new repository will implement the verification-only boundary.
 
@@ -216,3 +218,15 @@ flowchart TD
  H --> O["Host operation acceptance"]
  O --> W["Host account or session action"]
 ```
+
+## Composer implementation
+
+The draft now includes [Composer integration](design/composer-integration.md):
+a versioned infrastructure contract, separate Pulumi module, deployment timing
+gate, host composition example and ownership diagrams. This provisions verifier
+storage/signing only; see the implementation status for remaining production work.
+
+## Isolated end-to-end testing
+
+See [the internal test host](design/test-host.md) for its separate AWS stack,
+private Go package boundary, test client and email-to-acceptance diagrams.

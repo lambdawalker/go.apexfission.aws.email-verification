@@ -1,0 +1,5 @@
+build/
+.testhost/
+**/Pulumi.*.yaml
+**/Pulumi.*.json
+__pycache__/

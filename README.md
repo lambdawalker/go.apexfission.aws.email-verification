@@ -1,15 +1,78 @@
 # go.apexfission.aws.email-verification
 
-Planned Go/AWS module that verifies mailbox access for one host-authorized request and returns a signed verification assertion. The host owns eligibility checks, accounts, Cognito integration, and session tokens.
+Go library for host-authorized email verification. The host owns eligibility,
+accounts, sessions and the action authorized by verification evidence.
 
-**Status: design only; implementation has not started.**
+**Status: first executable core; not production-ready.** See
+[implementation status and decisions](docs/implementation-status.md) for boundaries
+and remaining AWS integration work. The [design overview](docs/verification-only-plan.md)
+remains the target specification, not a claim that every feature is implemented.
 
-See the [design plan and diagrams](docs/verification-only-plan.md) for:
+## Run
 
-- Host and verifier responsibilities.
-- A/B/C proof flow and signed-result delivery.
-- Single-use acceptance, replay prevention, and crash recovery.
+Go 1.25 or newer:
 
-The host generates a random nonce tied to its pending operation; the verifier adds its own transaction ID. Both are covered by the signed result. The host validates the result and consumes the operation once.
+```sh
+go test -race ./...
+go vet ./...
+go run ./cmd/demo
+bash scripts/preflight.sh config/examples/default.json
+```
 
-This repository is the planned successor for the verification-only responsibilities currently implemented in [go.apexfission.aws.verifyemail](https://github.com/lambdawalker/go.apexfission.aws.verifyemail). The design is organized into focused documents covering architecture, assertions, key management, operations, and security. Remaining decisions are tracked in [implementation decisions](docs/design/implementation.md).
+The demo performs an in-memory start, encrypted durable email job, confirmation,
+ES256 issuance, host acceptance and acknowledgment. It sends no real email and
+makes no AWS calls. It prints no proofs, tokens or assertions.
+
+## Integration
+
+Import the root package as `verification`. Create a `Host` and `Service` with
+separate stores. Constructors validate the effective timing configuration.
+`storage.Memory` is only for tests/demo. `adapters/dynamodb.Store` implements
+strongly consistent reads and conditional aggregate writes; each table needs a
+string partition key named `pk` and on-demand capacity.
+
+Trusted host code calls `Prepare`, then `Dispatch` to obtain a one-use permit.
+`Service.Start` consumes the permit and persists an encrypted email payload in
+the same aggregate as proof state. Call `Host.BindTransaction` before accepting
+results. Resume email delivery with `SendMail`; confirm with A plus B or C;
+use `Issue` and `Deliver` for signing and the trusted in-process handoff.
+
+The host supplies a `Mailer`, an authenticated authoritative `Trust` provider,
+its clock, storage clients, a proof HMAC key and a separate email encryption key.
+`adapters/kmssigner.Signer` supplies KMS signing. `LocalSigner` is for local tests.
+Trusted configuration must authorize signing key identity and lifetime.
+
+Methods handling `Request`, `Permit`, stores, signing or acceptance are backend
+integration APIs, not endpoints that accept arbitrary client JSON. Host HTTP
+handlers must enforce caller/session ownership and project only safe DTOs.
+Do not expose a complete `Transaction` to a client: it contains internal workflow
+state. Status APIs return a deliberately limited `Progress` value.
+
+## Deployment gate
+
+```sh
+bash scripts/preflight.sh effective-config.json your-deployment-command args
+```
+
+The command is invoked only after validation succeeds. JSON values are integer
+seconds and overlay documented defaults; unknown, duplicate and null fields are
+rejected. Environment overrides must be materialized into that effective JSON
+before this gate. This wrapper itself creates no AWS resources. The optional Composer/Pulumi module
+provides verifier storage and signing resources.
+
+The pipeline runs tests, race detection, vet and default configuration validation.
+Host deployments must use the gate and the same constructor/startup validation.
+
+## Larger-project composition
+
+See [Composer integration](docs/design/composer-integration.md) for the versioned
+feature contract, native Pulumi module, host ownership and diagrams.
+Run `go run ./examples/composed` for an offline composition plan.
+The optional `infrastructure` module requires Go 1.27.3+; the runtime stays on Go 1.25.
+
+## Isolated test host
+
+The [test-host guide](docs/design/test-host.md) covers a private, IAM-only Lambda
+host, its separate Composer stack, SES email, background worker, deployment
+commands and diagrams. Its implementation lives under `internal`; other apps
+continue importing the public library. No public endpoint is created.
