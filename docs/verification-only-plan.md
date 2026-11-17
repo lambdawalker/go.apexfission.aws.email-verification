@@ -124,10 +124,117 @@ confirmation: retrying delivery must preserve the same verification identity,
 never perform a new verification or authorize another operation. The persistence
 and retry mechanism is still to be designed.
 
+## Assertion schema, signing, and trusted keys
+
+Status: initial design baseline from our discussion; not implemented. Exact field
+names below are proposed contract names. Signing algorithm and operational timing
+values remain open.
+
+### Format and initial schema
+
+Use a digitally signed JWT in JWS compact serialization. JWT defines the claims;
+JWS protects the header and payload with a signature. This is a verification
+assertion, not a session/access token, OAuth flow, or OIDC ID token.
+
+All payload fields below are required in the initial profile.
+
+| Payload field | JSON type | Meaning and validation |
+| --- | --- | --- |
+| `iss` | string | Configured verifier issuer; must exactly match the trusted issuer. |
+| `aud` | string | Intended host identifier; require one exact configured audience in this profile. |
+| `email` | string | Address verified for this transaction; must match the address bound at initiation. |
+| `email_verified` | boolean | Must be `true`; unsuccessful attempts do not produce success assertions. |
+| `nonce` | string | Host-generated random request binding, echoed unchanged from authorized initiation. |
+| `transaction_id` | string | Verifier transaction identifier, matched against the pending operation. |
+| `verified_at` | integer | UTC Unix seconds when the required proofs were successfully validated. |
+| `iat` | integer | UTC Unix seconds when this assertion was issued. |
+| `exp` | integer | UTC Unix seconds at which acceptance expires. |
+| `jti` | string | Unique assertion identifier, retained across delivery retries for deduplication. |
+
+The host nonce remains proposed as 32 cryptographically random bytes encoded as
+unpadded base64url. Transaction and assertion ID encodings remain to be finalized.
+Operation names, account/session associations, and eligibility stay in host storage.
+Do not include A, B, C, their secret values, or session credentials in the assertion.
+
+| Protected header | Initial rule |
+| --- | --- |
+| `typ` | Require a distinct assertion type; proposed value `email-verification+jwt` is a local profile choice, not a registered type claim. |
+| `alg` | Require the configured asymmetric signing algorithm; exact algorithm remains undecided. Reject `none` and algorithms outside the configured allowlist. |
+| `kid` | Stable unique identifier for the specific signing key in the trusted key set; never reuse it for a replacement key. |
+
+Validate types, required fields, signature, issuer, audience, request bindings,
+and time bounds. Require `verified_at <= iat < exp`, and enforce a configured
+maximum verification age and assertion lifetime, with a bounded clock tolerance.
+Those durations are still to be chosen; the ten-minute email-proof lifetime does
+not automatically define the assertion lifetime. Reject duplicate JSON members
+and unsupported assertion types. Use dedicated validation rules so login tokens
+and verification assertions cannot substitute for one another.
+
+Prefer redelivery of the same persisted signed assertion. Retries must preserve
+the verification identity, `jti`, bindings, verification time, and original
+expiration; retrying must not renew the acceptance window. The host still
+atomically consumes its pending operation and records durable follow-up work.
+A signature provides integrity, not confidentiality or automatic single use.
+
+### AWS signing and public-key distribution
+
+Use an asymmetric AWS KMS signing key. The verifier calls KMS to sign, and the
+application does not receive the private key. Restrict signing permissions to the
+verifier role and keep signing keys separate from proof HMAC keys.
+
+Proposed stable public-key URL on the host API domain:
+
+```text
+https://api.example.com/email-verification/jwks.json
+```
+
+This is a deployment-selected route, not a required standards path. Export public
+keys through KMS GetPublicKey and convert its SPKI representation to public JWKs.
+The JWKS contains public key material and identifiers only. The host can also use
+the same trusted set through deployment-managed configuration when composed.
+
+Consumers must configure the trusted issuer and key source independently.
+An incoming assertion may select a known key with `kid`; it must not introduce
+a trusted key or arbitrary key-fetch URL. Protect publication permissions and use
+HTTPS for the endpoint. Cache policy and bounded refresh behavior remain to be
+defined.
+
+### Rotation lifecycle
+
+KMS automatic rotation does not cover asymmetric signing keys. Our deployment or
+rotation workflow will orchestrate replacement keys:
+
+1. Create a new asymmetric KMS key with a new key identifier.
+2. Publish its public JWK alongside the existing public key.
+3. Allow consumers to receive the new key before switching signing to it.
+4. Stop signing with the old key, retaining its public key until all assertions
+   signed with it expire, including allowed clock tolerance.
+5. Retire the old key under a defined retention policy.
+
+Account for consumer/CDN cache lifetimes when scheduling the overlap. Each
+assertion's `kid` must identify the actual signing key, not a mutable alias.
+Compromise response is separate from routine rotation: consumers must be able to
+reject a revoked key even before its assertions expire. Disabling a KMS key alone
+does not revoke signatures validated with a downloaded public key.
+
+### Decisions still open for this item
+
+- Signing algorithm and KMS key specification.
+- Final assertion type, ID encoding, email comparison rules, and schema evolution.
+- Assertion lifetime, maximum verification age, and clock tolerance.
+- Rotation cadence, cache/refresh limits, propagation checks, and old-key retention.
+- Emergency revocation distribution and recovery behavior.
+
+References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
+[JWT validation guidance (RFC 8725)](https://www.rfc-editor.org/rfc/rfc8725.html),
+[KMS public keys](https://docs.aws.amazon.com/kms/latest/APIReference/API_GetPublicKey.html),
+and [KMS rotation](https://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html).
+
 ## Next implementation decisions
 
-- Define the assertion schema, signing algorithm, trusted-key distribution and
-  rotation. JWT/JWS is a candidate format, not an OAuth or OIDC flow.
+- Finalize the remaining choices in [Assertion schema, signing, and trusted keys](#assertion-schema-signing-and-trusted-keys).
+  The initial fields, signed JWT/JWS format, AWS KMS approach, and proposed JWKS
+  route are recorded there; algorithm and operational timing values remain open.
 - Define direct-call and separate-Lambda contracts, including authorized initiation,
   result delivery, recovery and client completion behavior.
 - Move eligibility, Cognito enrollment and grants/session code to the host side;
