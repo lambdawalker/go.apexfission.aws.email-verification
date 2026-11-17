@@ -26,8 +26,10 @@ its final repository location is still to be decided.
 
 ## Next discussion
 
-Finalize durable rollback enforcement: host storage, concurrent updates and
-content comparison. Per-key and revocation fields are decided.
+Define authorized initiation, confirmation and recoverable result-delivery contracts.
+Host-owned durable rollback storage and atomic concurrent updates are decided;
+exact digest representation and retry bounds remain implementation details.
+Per-key and revocation fields are decided.
 The retrieval routes and freshness policy are decided. See [key lifecycle and revocation](design/keys/lifecycle-and-revocation.md)
 and [implementation decisions](design/implementation.md).
 
@@ -176,3 +178,15 @@ preserve existing deep links.
 ### Acceptance scenarios to add before implementation is considered complete
 
 [Read this section](design/security.md#acceptance-scenarios-to-add-before-implementation-is-considered-complete).
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ V["Verifier: prove mailbox access"] --> A["Signed assertion"]
+ A --> H["Host validator"]
+ S["Authoritative key status and public keys"] --> H
+ H <--> D["Host durable trust history"]
+ H --> O["Host operation acceptance"]
+ O --> W["Host account or session action"]
+```
