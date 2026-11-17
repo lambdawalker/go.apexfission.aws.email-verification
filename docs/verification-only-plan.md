@@ -78,7 +78,7 @@ If A is lost, restart verification rather than falling back to email-only comple
 
 ## Signed result and request binding
 
-The host generates a cryptographically random nonce (proposed: 32 bytes) and
+The host generates a cryptographically random nonce (32 bytes) and
 stores its association with the expected email, intended operation, account or
 signup context, initiating session, and expiry. The verifier creates its own
 transaction ID. Keep the two identifiers separate; neither is an authorization
@@ -140,6 +140,7 @@ All payload fields below are required in the initial profile.
 
 | Payload field | JSON type | Meaning and validation |
 | --- | --- | --- |
+| `schema_version` | integer | Required value `1` for this profile; reject missing or unsupported versions. |
 | `iss` | string | Configured verifier issuer; must exactly match the trusted issuer. |
 | `aud` | string | Intended host identifier; require one exact configured audience in this profile. |
 | `email` | string | Address verified for this transaction; must match the address bound at initiation. |
@@ -151,8 +152,9 @@ All payload fields below are required in the initial profile.
 | `exp` | integer | UTC Unix seconds at which acceptance expires. |
 | `jti` | string | Unique assertion identifier, retained across delivery retries for deduplication. |
 
-The host nonce remains proposed as 32 cryptographically random bytes encoded as
-unpadded base64url. Transaction and assertion ID encodings remain to be finalized.
+The host nonce, transaction ID, and assertion ID each use independently generated
+32-byte cryptographically random values encoded as canonical unpadded base64url
+(43 characters). See the encoding and evolution rules below.
 Operation names, account/session associations, and eligibility stay in host storage.
 Do not include A, B, C, their secret values, or session credentials in the assertion.
 
@@ -184,6 +186,58 @@ the verification identity, `jti`, bindings, verification time, and original
 expiration; retrying must not renew the acceptance window. The host still
 atomically consumes its pending operation and records durable follow-up work.
 A signature provides integrity, not confidentiality or automatic single use.
+
+### ID encoding and email comparison
+
+Decisions for version 1:
+
+- Generate `nonce` on the host and `transaction_id` and `jti` on the verifier
+  independently using a cryptographically secure random generator. Each is
+  32 bytes encoded as canonical unpadded base64url (43 characters).
+- Validate the alphabet, length, decoded byte length, and canonical encoding
+  (decode then re-encode must produce the same string). Reject padding,
+  whitespace, and alternative encodings. Compare identifiers exactly and
+  case-sensitively; never normalize or derive one identifier from another.
+- Preserve the same identifiers on retries of the same operation/result.
+  A new verification transaction receives new identifiers. These IDs bind and
+  identify records; possession of an ID alone never authorizes an operation.
+  The signing key's `kid` is a separate deployment-managed identifier and is
+  not subject to this random request-ID encoding.
+- Bind the exact email string accepted through authorized initiation, use that
+  address for delivery, and return it unchanged in the signed assertion.
+  The host compares the decoded JSON string exactly against the stored pending
+  operation's email, not against a fresh client-supplied value or raw JSON bytes.
+- Do not trim, case-fold, remove dots, remove plus tags, or apply Unicode
+  normalization during assertion comparison. Any supported validation or
+  normalization policy runs before request binding; the host must store and
+  send the same resulting value. Unsupported address inputs are rejected,
+  rather than silently rewritten by the verifier.
+- This equality rule binds one transaction. It does not define account uniqueness
+  or claim that differently written addresses necessarily identify different
+  mailboxes; those account policies remain host-owned.
+
+### Schema evolution
+
+Require a signed payload field `schema_version` with integer value `1`.
+The protected header type remains `email-verification+jwt`; schema version
+identifies the contract revision, while the type identifies the message purpose.
+
+Within version 1, optional informational payload fields may be added only when
+ignoring them preserves the existing security meaning. Consumers may ignore
+unknown informational payload fields, but must still validate every required
+field and reject duplicate JSON members. This does not relax JOSE header
+processing or allow unsupported critical header parameters.
+
+Changes to required fields, types, interpretation, or security-relevant rules
+require a new schema version. Reject missing, malformed, or unsupported versions;
+never silently interpret a newer version as version 1. Deploy explicit support
+to consumers before issuing a new version, and bound any period accepting both
+versions by policy. Do not turn a security-critical requirement into an optional
+field older consumers can ignore.
+
+Acceptance checks must include malformed/noncanonical IDs, mismatched email
+strings, missing/unsupported versions, and harmless informational additions that
+leave all required checks intact.
 
 ### Selected signing algorithm: ES256
 
@@ -306,7 +360,6 @@ does not revoke signatures validated with a downloaded public key.
 
 ### Decisions still open for this item
 
-- ID encoding, email comparison rules, and schema evolution.
 - Assertion lifetime, maximum verification age, and clock tolerance.
 - Rotation cadence, cache/refresh limits, propagation checks, and old-key retention.
 - Emergency revocation distribution and recovery behavior.
