@@ -540,14 +540,52 @@ Compliance retention is required for this first draft.
 Reference: [S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html).
 This is a recorded design decision, not an AWS deployment.
 
-Store each public key as a JWK in a signed record binding its `kid`, issuer,
-algorithm, immutable KMS key ARN, creation time, planned activation time, record
-schema/version, and the signing key's identifier. Sign the exact serialized record
-using the current assertion-signing private key in KMS. For routine replacement,
-the currently authorized key signs the new key's record before cutover. Keep the
-signature with the record, using an explicitly typed signed-record format distinct
-from email-verification assertions; neither validator may accept the other type.
-The serialization/profile details remain to be specified.
+#### Signed public-key record format
+
+Decision: store one JWS Compact Serialization record per published public key,
+with a UTF-8 JSON payload and an ES256 signature made by the current authorized
+assertion-signing KMS key. Store the complete compact JWS under S3 legal hold.
+This is a key record, not an email-verification assertion.
+
+| Part | Required field | Meaning |
+| --- | --- | --- |
+| Protected header | `typ` | Exact local profile value `email-verification-key-record+jws`; not a claim of a registered media type. |
+| Protected header | `alg` | Exact value `ES256`. |
+| Protected header | `kid` | Identifier of the existing key signing this record. |
+| Payload | `schema_version` | Integer `1`; reject unsupported versions. |
+| Payload | `issuer` | Expected verifier issuer identifier. |
+| Payload | `record_id` | Unique identifier for this historical record. |
+| Payload | `public_key` | Public JWK for the key being published, with its own `kid`, `kty=EC`, `crv=P-256`, `alg=ES256`, `use=sig`, and public coordinates `x` and `y`. Never include private key material such as `d`. |
+| Payload | `kms_key_arn` | Immutable ARN of the published key, never a mutable alias. |
+| Payload | `created_at` | Key creation time. |
+| Payload | `recorded_at` | Record issuance time. |
+| Payload | `planned_activation_at` | Intended signing activation time when this record was published. |
+
+Use UTC RFC 3339 timestamps for the three record time fields. The protected
+header's `kid` identifies the signer; `public_key.kid` identifies the key being
+introduced. For routine rotation, key A signs the record describing key B before
+cutover.
+
+Preserve the exact compact JWS bytes. Verify its original encoded header and
+payload using the standard JWS signing input; never parse and reserialize JSON
+to reconstruct the signed bytes. No custom JSON canonicalization is required.
+Reject duplicate JSON member names, unexpected algorithms, unsupported schemas,
+and record/assertion type confusion. Resolve the signer from established trusted
+configuration, not an embedded key or a token-supplied URL.
+
+The historical record has no expiration field. Its continued storage or
+mathematically valid signature does not authorize the published key forever.
+The separately updateable key-status document controls actual activation,
+retirement and revocation. `planned_activation_at` preserves the original plan;
+it does not override current status. Preserve record identity across publication
+retries rather than silently replacing an archived record.
+
+The S3 version ID is recorded after upload in publication metadata; it is not
+included in the pre-upload signed payload. Consumers retrieve the exact archived
+version as required above.
+
+References: [JWS, RFC 7515](https://www.rfc-editor.org/rfc/rfc7515.html)
+and [JWK, RFC 7517](https://www.rfc-editor.org/rfc/rfc7517.html).
 
 This first draft deliberately does not introduce a separate key-management signing
 key. Consumers must already trust the record signer through trusted configuration
@@ -702,7 +740,7 @@ Reference: [AWS KMS key deletion](https://docs.aws.amazon.com/kms/latest/develop
 
 ### Decisions still open for this item
 
-- Exact signed-record serialization/profile; S3 legal-hold protection is decided.
+- Initial trust provisioning and detailed publication/recovery contracts; the signed-record format and S3 legal-hold protection are decided.
 - Key-status wire schema, companion endpoint path, and concrete freshness/rollback checks.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
