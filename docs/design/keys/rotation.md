@@ -29,3 +29,18 @@ behalf. Waiting a week does not establish that every consumer has refreshed.
 Publication failure pauses cutover and raises an alert; it does not silently
 extend the old key's authorized signing period.
 
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ N["Prepare replacement before annual deadline"] --> P["Publish seven days before planned activation"]
+ P --> R{"All enabled retrieval routes ready?"}
+ R -->|No| F["Pause cutover and alert"]
+ R -->|Yes| C["Switch signing at authorized cutover"]
+ C --> O["Old key verifies outstanding assertions only"]
+ O --> E["Acceptance window ends"]
+ E --> H["Retain public archive indefinitely"]
+ C --> K["Retain retired KMS key three calendar months"]
+ K --> D["Schedule deletion with additional waiting period"]
+```
