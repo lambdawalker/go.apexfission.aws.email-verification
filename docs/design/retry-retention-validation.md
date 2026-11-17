@@ -3,7 +3,8 @@
 [Design overview](../verification-only-plan.md) · [Storage ownership](storage-ownership.md)
 
 Status: agreed requirements; validation code and deployment integration are not yet
-implemented. Exact start-validity duration and recovery protocol remain open.
+implemented. The start window defaults to 300 seconds; see the
+[initiation recovery contract](initiation.md#start-authorization-and-missing-record-recovery).
 
 ## Selected defaults
 
@@ -46,8 +47,11 @@ previous state. If the distinction cannot be established, fail closed and raise
 a recovery error. Neither a client-supplied fresh timestamp nor another arbitrary
 idempotency key may silently reset the same operation.
 
-The exact host/verifier creation handshake and start-validity duration must be
-specified and tested before enabling destructive cleanup. Loss of all relevant
+The start window is fixed at authorization with a configurable 300-second default.
+The host records dispatch before calling; uncertain dispatch with missing verifier
+state requires reconciliation, not automatic recreation. Block the old host
+operation from authorizing actions before an explicit replacement. Exact fencing
+and creation-handshake implementation must be tested before destructive cleanup. Loss of all relevant
 durable history cannot be solved by a database lookup alone. Recovery must retain
 or reestablish a trusted authorization boundary; do not claim protection against
 arbitrary simultaneous loss or rollback of all records.
@@ -134,7 +138,7 @@ effective configuration blocks deployment before mutations, and startup rejects 
 
 ## Remaining decisions
 
-Finalize start-authorization duration and binding, safe first-creation/recovery
-handshake, backoff parameters, reconciliation limits, proof-secret cleanup and
+Finalize the selected start-authorization binding and safe first-creation/recovery
+handshake implementation, backoff parameters, reconciliation limits, proof-secret cleanup and
 backup retention. Deployment validation is a required implementation deliverable,
 not functionality delivered by this documentation update.
