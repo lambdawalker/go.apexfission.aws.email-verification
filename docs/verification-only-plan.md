@@ -17,11 +17,16 @@ calls are the default; no extra host-to-verifier shared secret or network
 endpoint is required for these calls. Separate-service deployment is deferred to
 [its own design document](design/separate-deployment.md).
 
+Default storage is DynamoDB on-demand with separate verifier and host tables.
+See [storage ownership](design/storage-ownership.md) for record responsibilities,
+result cleanup boundaries and adapter flexibility.
+
 ## Design documents
 
 | Document | Contents |
 | --- | --- |
 | [Architecture and verification flow](design/architecture.md) | Core design |
+| [Storage ownership and default database](design/storage-ownership.md) | Separate DynamoDB tables and retention responsibilities |
 | [Verification initiation](design/initiation.md) | Authorized start, idempotency and delivery diagrams |
 | [Confirmation and recoverable issuance](design/confirmation.md) | Atomic proof consumption and signing recovery |
 | [Result delivery and acknowledgment](design/result-delivery.md) | Trusted handoff, duplicate delivery and client completion |
