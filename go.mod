@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/kms v1.38.0
+	github.com/lambdawalker/go.infra.composer v0.0.0-20261103235125-ad4cfd268616
 )
 
 require (
