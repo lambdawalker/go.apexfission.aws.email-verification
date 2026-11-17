@@ -10,6 +10,13 @@ assertion. The host owns eligibility, accounts, Cognito, sessions, and the actio
 authorized by that evidence. Cognito integration belongs outside this repository;
 its final repository location is still to be decided.
 
+## Default deployment
+
+The verifier runs as an imported library inside the host process. Trusted internal
+calls are the default; no extra host-to-verifier shared secret or network
+endpoint is required for these calls. Separate-service deployment is deferred to
+[its own design document](design/separate-deployment.md).
+
 ## Design documents
 
 | Document | Contents |
@@ -32,8 +39,9 @@ its final repository location is still to be decided.
 Authorized initiation and start idempotency are recorded in [Verification initiation](design/initiation.md).
 Confirmation and durable issuance are recorded in [Confirmation](design/confirmation.md).
 Trusted result delivery, acknowledgment and client completion ownership are recorded
-in [Result delivery](design/result-delivery.md). Next: concrete authentication and
-retry/status authorization, response fields, retry settings and retention.
+in [Result delivery](design/result-delivery.md). The default is in-process library integration. Next: client retry/status
+authorization, response fields, retry settings and retention. Service-to-service
+authentication details are deferred to the separate-deployment document.
 Host-owned durable rollback storage and atomic concurrent updates are decided;
 exact digest representation and retry bounds remain implementation details.
 Per-key and revocation fields are decided.
@@ -42,6 +50,7 @@ and [implementation decisions](design/implementation.md).
 
 ## Separate drafts and references
 
+- [Separate host and verifier deployment](design/separate-deployment.md): deferred elaboration.
 - [IP and location signals](ip-location-signals-draft.md) remain an optional, unapproved draft.
 - [Related efforts and reading list](related-efforts.md).
 
