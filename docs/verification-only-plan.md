@@ -412,3 +412,8 @@ inspiration does not imply protocol interoperability or whole-system conformance
 
 References reviewed for this design on 2026-11-16. No NIST assurance level, MFA,
 phishing-resistance guarantee, or standards certification is claimed.
+
+## Related efforts
+
+See the [related projects and standards reading list](related-efforts.md) for
+Keycloak, OAuth JWT access-token typing, DPoP, and JWT validation guidance.
