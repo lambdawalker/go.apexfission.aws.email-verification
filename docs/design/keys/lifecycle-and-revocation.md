@@ -38,8 +38,8 @@ overrides cached authorization immediately; unknown status is not authorization.
 Validate status and key-set consistency before acceptance, rejecting ambiguous
 or inconsistent views. Source authentication, freshness and rollback protection
 must not depend solely on the possibly compromised assertion signing key.
-Specify the wire schema, endpoint path and revision/freshness validation details
-during implementation; preserve previously learned revocations.
+Use the schema and retrieval contract below; finalize durable revision enforcement
+during implementation and preserve previously learned revocations.
 
 A separate administrative role controls trust-status publication and emergency
 replacement. The verifier runtime cannot modify the allowed/revoked list.
@@ -161,6 +161,57 @@ authoritative source refreshes cache age; `updated_at` remains the last change
 time. An old intermediary response must not reset freshness. Both routes follow the
 retrieval contract below and the existing refresh, cooldown and maximum-age limits.
 
+### Per-key entries and permanent revocations
+
+Decision: each entry in `keys` has the following required fields. Key identity is
+scoped to the document's issuer; never reuse a `kid`.
+
+| Field | Purpose |
+| --- | --- |
+| `kid` | Unique key identifier within the issuer. |
+| `state` | `published`, `active`, `retiring`, `retired`, or `revoked`. |
+| `alg` | `ES256` for the first version. |
+| `signing_not_before` | Earliest permitted assertion issuance time. |
+| `signing_not_after` | Exclusive deadline for signing new assertions. |
+| `accept_until` | Exclusive key-level deadline for accepting outstanding assertions. |
+| `archive_ref` | Object containing `bucket`, `key`, and `version_id` identifying the exact signed public-key record in S3. |
+
+Each permanent `revocations` entry contains:
+
+| Field | Purpose |
+| --- | --- |
+| `kid` | Revoked key identifier, scoped to the document's issuer. |
+| `revoked_at` | Administrative revocation time for audit. |
+| `reason_code` | Bounded reason value: `compromise` or `administrative` in the initial schema. |
+| `revision` | Document revision that first introduced this revocation. |
+
+Use UTC RFC 3339 timestamps for these time fields. Convert them to instants when
+comparing with JWT timestamps. Require unique key IDs within each collection,
+recognized states and algorithms, complete version-specific archive references,
+and valid ordering: `signing_not_before < signing_not_after <= accept_until`.
+Revocation-entry revisions cannot exceed the enclosing document revision.
+The same key may occur in both collections; its revocation always takes precedence.
+
+Signing and acceptance deadlines serve different purposes. Signing may stop at
+noon while previously issued assertions remain acceptable within their individual
+deadlines, bounded by `accept_until`. A key deadline never extends the assertion's
+own expiration, maximum verification age or host-operation deadline. Apply the
+configured clock tolerance once to each relevant time comparison, never repeatedly
+through nested checks. Clock tolerance does not authorize continued signing after
+retirement or give a known revocation a grace period.
+
+A revoked key is rejected even if another field says active or its acceptance
+window remains open. `revoked_at` is audit information, not a cutoff allowing
+tokens with earlier claimed issuance times. Malformed or inconsistent status
+must not authorize acceptance; preserve learned revocations independently of
+whether the rest of an update is usable.
+
+The archive provides public-key material and immutable KMS identity; the status
+entry determines current authorization. Require matching issuer, key ID and
+algorithm between the status entry and referenced record. Archive references are
+locators within configured trusted storage, not permission to follow arbitrary
+token-supplied resources.
+
 ### Retrieval and freshness contract
 
 Decision: keep caching in the host validator. Every refresh must reach the current
@@ -215,7 +266,7 @@ and [HTTP caching](https://www.rfc-editor.org/rfc/rfc9111.html).
 ### Decisions still open for this item
 
 - Initial trust provisioning and detailed publication/recovery contracts; the signed-record format and S3 legal-hold protection are decided.
-- Detailed nested key-entry schema and durable rollback enforcement mechanics. Top-level fields, lifecycle states, default locations and retrieval/freshness behavior are decided.
+- Durable rollback enforcement mechanics, including host storage, concurrency and content comparison. Key-entry and revocation fields, lifecycle states, default locations and retrieval/freshness behavior are decided.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
 [JWT validation guidance (RFC 8725)](https://www.rfc-editor.org/rfc/rfc8725.html),
