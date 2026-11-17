@@ -7,8 +7,10 @@
 - Finalize the remaining choices in [Assertion schema, signing, and trusted keys](../design/assertions.md#assertion-schema-signing-and-trusted-keys).
   The initial fields, signed JWT/JWS format, AWS KMS approach, and proposed JWKS
   route, ES256 selection, and operational timing defaults are recorded there.
-- Define direct-call and separate-Lambda contracts, including authorized initiation,
-  result delivery, recovery and client completion behavior.
+- Implement the agreed [initiation contract](initiation.md), including authorized
+  start and idempotency. Finalize its transport, retention and delivery details.
+- Define confirmation, result delivery, recovery and client completion contracts
+  for direct-call and separate-Lambda deployments.
 - Move eligibility, Cognito enrollment and grants/session code to the host side;
   remove their permissions and integration requirements from the verifier.
 - Add shared assertion validation and host acceptance contracts; keep signing
