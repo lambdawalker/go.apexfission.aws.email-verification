@@ -4,7 +4,7 @@
 
 Status: agreed initiation design; not implemented. Field names below are proposed
 wire names. [Confirmation and recoverable issuance](confirmation.md) are recorded
-separately; trusted result delivery remains to be finalized.
+separately; see [result delivery](result-delivery.md) for the agreed handoff rules.
 
 ## Authorized start
 
@@ -31,6 +31,54 @@ bindings, the idempotency mapping and pending delivery work without a gap that
 could lose the job or create a second transaction after a crash. Return the
 transaction ID, fixed proof expiration and current delivery status. These fields
 are not proof of completed email verification.
+
+## Start authorization and missing-record recovery
+
+Decision: default start-authorization lifetime is 300 seconds, configurable.
+The host durably records request identity, immutable bindings and the fixed
+start deadline before calling the verifier. It records dispatch beginning before
+the first call. Every retry retains those values. The start window is distinct
+from the ten-minute proof lifetime measured from proof creation.
+
+An authenticated, matching retry may return an existing transaction's status
+after the start window closes; this cannot create work or extend any deadline.
+If no transaction exists after the start deadline, reject creation.
+
+If an earlier dispatch has an uncertain outcome and no verifier transaction can
+be found, fail closed and reconcile instead of recreating it automatically.
+A missing record cannot distinguish a call that never arrived from deleted data.
+Storage errors are not evidence of absence.
+
+The first dispatch must be distinguishable from later attempts by the trusted
+host creation protocol. Marking dispatch before the call does not mean the
+legitimate initial call is itself a retry. The exact conditional claim/fencing
+mechanism remains to be implemented and tested; clients cannot assert first-call
+status. A restarted worker with uncertain prior dispatch must not assume it is
+the original first call.
+
+Before replacement, durably prevent the old host operation from authorizing
+actions, including late results racing with replacement. If it already accepted,
+reconcile its existing work rather than creating a duplicate effect. Then permit
+a genuinely new authorized operation with fresh bindings and idempotency key.
+Never merely renew the old request deadline. Preserve unresolved history until
+the recovery policy permits cleanup.
+
+```mermaid
+flowchart TD
+    A["Authorized start or retry"] --> E{"Matching transaction exists?"}
+    E -->|Yes| S["Return recorded status without renewal"]
+    E -->|No| T{"Start deadline passed?"}
+    T -->|Yes| R["Reject creation"]
+    T -->|No| F{"Trusted first dispatch established?"}
+    F -->|Yes| C["Conditionally create once"]
+    F -->|No or uncertain| U["Reconcile; do not recreate"]
+    U --> B["Block old operation from authorizing actions"]
+    B --> N["Explicitly authorize replacement if appropriate"]
+```
+
+Deployment/startup validation must include the configured start window in safe
+deduplication-retention calculations. Stored deadlines remain fixed when defaults
+change. See [timing validation](retry-retention-validation.md).
 
 ## Initiation and delivery sequence
 
@@ -83,7 +131,9 @@ flowchart TD
     L -->|Yes| M{"Request fields identical?"}
     M -->|No| C["Conflict"]
     M -->|Yes| E["Return existing transaction and current status"]
-    L -->|No| W["Conditionally commit transaction and delivery work"]
+    L -->|No| G{"Within start window and trusted first dispatch?"}
+    G -->|No| Q["Reject or reconcile missing state"]
+    G -->|Yes| W["Conditionally commit transaction and delivery work"]
     W -->|Won| N["Return new transaction"]
     W -->|Concurrent writer won| L
     W -->|Storage failure| F["Return retryable failure"]
