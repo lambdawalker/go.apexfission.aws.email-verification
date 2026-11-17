@@ -76,3 +76,17 @@ inspiration does not imply protocol interoperability or whole-system conformance
 References reviewed for this design on 2026-11-16. No NIST assurance level, MFA,
 phishing-resistance guarantee, or standards certification is claimed.
 
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ P["Confirmation attempt"] --> A{"Client secret A valid for transaction?"}
+ A -->|No| R["Reject"]
+ A -->|Yes| E{"Email proof B or C valid?"}
+ E -->|No| R
+ E -->|Yes| C["Claim confirmation once"]
+ C --> S["Issue bound mailbox-access assertion"]
+ S --> X["Host validates evidence and applies eligibility and assurance policy"]
+ X --> H["Host accepts matching operation once"]
+```
