@@ -27,3 +27,17 @@ A payload field named `typ` cannot substitute for the header check.
 
 The analogous type-label pattern does not make our protocol compatible with
 Keycloak, OAuth access tokens, or DPoP.
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ K["Keycloak action-token patterns"] --> R["Design review"]
+ J["JWT typing and validation guidance"] --> R
+ O["OAuth profile examples"] --> R
+ R --> P["Our dedicated assertion profile"]
+ P --> T["Protected header type"]
+ P --> V["Signature, claims and request-binding checks"]
+```
+
+These arrows show design inspiration only, not dependencies or interoperability.
