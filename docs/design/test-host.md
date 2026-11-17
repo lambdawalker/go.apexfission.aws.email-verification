@@ -42,6 +42,11 @@ business-work marker, and this host creates no account.
 
 ## Build and deploy
 
+Prefer the root `deploy.sh` / `deploy.bat` [guided wizard](deployment-wizard.md).
+The explicit commands below remain the low-level helper for an already selected
+Pulumi backend; do not switch backends when moving an existing stack to the wizard.
+
+
 Prerequisites: Go 1.25+ for the Lambda build, Go 1.27.3+ for the infrastructure
 module, Python 3, AWS CLI, Pulumi CLI, a Pulumi backend and an AWS deployment
 profile. Go can download the newer infrastructure toolchain automatically.
