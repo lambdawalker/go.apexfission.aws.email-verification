@@ -12,8 +12,10 @@ AWS resource access still requires the host runtime's configured permissions.
 
 Client-facing routes still enforce proof validation and operation authorization.
 For progress, use the host session where available; a short-lived, unguessable
-operation-scoped credential is the agreed direction for pre-account flows.
-Its exact issuance, storage, lifetime and revocation rules remain to be specified.
+operation-scoped status token is selected for pre-account flows. See
+[Client status authorization](client-status.md) for its read-only scope,
+hash-only storage, thirty-minute default and loss handling. Detailed credential
+issuance and revocation mechanics remain to be specified.
 
 ```mermaid
 flowchart TD
