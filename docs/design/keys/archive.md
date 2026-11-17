@@ -115,3 +115,17 @@ follows the three-month policy below.
 - A separate key-management authority remains a possible future enhancement,
   not a first-draft requirement.
 
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ N["New public key B and metadata"] --> J["JWS record signed by trusted key A"]
+ J --> U["Upload exact bytes with legal hold ON"]
+ U --> P{"Version and protection verified?"}
+ P -->|No| F["Fail publication and alert"]
+ P -->|Yes| R["Record exact bucket, key and version ID"]
+ R --> S["Publish reference in current key status"]
+ S --> H["Host checks record and current authorization"]
+ R --> L["Retain public history indefinitely"]
+```
