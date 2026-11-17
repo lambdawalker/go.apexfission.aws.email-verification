@@ -158,9 +158,18 @@ Do not include A, B, C, their secret values, or session credentials in the asser
 
 | Protected header | Initial rule |
 | --- | --- |
-| `typ` | Require a distinct assertion type; proposed value `email-verification+jwt` is a local profile choice, not a registered type claim. |
+| `typ` | Require the exact value `email-verification+jwt` in the protected header. This is our selected local profile type, not a claim of a registered media type. |
 | `alg` | Require `ES256` for the first version. Reject `none` and every other algorithm; bind each trusted key to its configured algorithm. |
 | `kid` | Stable unique identifier for the specific signing key in the trusted key set; never reuse it for a replacement key. |
+
+The assertion type is finalized as `email-verification+jwt` in the protected
+JWT/JWS header's `typ` field, not in the payload. Reject a missing or different
+header type even if the signature is valid; a payload `typ` cannot substitute
+for it. This identifies evidence of completed verification, not an action token
+used to initiate verification. Dedicated validators must also reject this
+assertion wherever a login or access token is required. The type check supplements,
+and never replaces, signature and claim validation. This follows the explicit
+typing pattern in RFC 8725 without claiming interoperability with other profiles.
 
 Validate types, required fields, signature, issuer, audience, request bindings,
 and time bounds. Require `verified_at <= iat < exp`, and enforce a configured
@@ -297,7 +306,7 @@ does not revoke signatures validated with a downloaded public key.
 
 ### Decisions still open for this item
 
-- Final assertion type, ID encoding, email comparison rules, and schema evolution.
+- ID encoding, email comparison rules, and schema evolution.
 - Assertion lifetime, maximum verification age, and clock tolerance.
 - Rotation cadence, cache/refresh limits, propagation checks, and old-key retention.
 - Emergency revocation distribution and recovery behavior.
