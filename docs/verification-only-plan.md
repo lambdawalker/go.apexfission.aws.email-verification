@@ -176,8 +176,9 @@ typing pattern in RFC 8725 without claiming interoperability with other profiles
 Validate types, required fields, signature, issuer, audience, request bindings,
 and time bounds. Require `verified_at <= iat < exp`, and enforce a configured
 maximum verification age and assertion lifetime, with a bounded clock tolerance.
-Those durations are still to be chosen; the ten-minute email-proof lifetime does
-not automatically define the assertion lifetime. Reject duplicate JSON members
+The configured defaults are a ten-minute assertion lifetime, fifteen-minute
+maximum verification age, and three-second clock tolerance, as specified below.
+The email-proof lifetime is a separate ten-minute window. Reject duplicate JSON members
 and unsupported assertion types. Use dedicated validation rules so login tokens
 and verification assertions cannot substitute for one another.
 
@@ -186,6 +187,72 @@ the verification identity, `jti`, bindings, verification time, and original
 expiration; retrying must not renew the acceptance window. The host still
 atomically consumes its pending operation and records durable follow-up work.
 A signature provides integrity, not confidentiality or automatic single use.
+
+### Configurable timing and host acceptance
+
+These are selected system configuration defaults, not hard-coded constants or
+durations mandated by a standard. Configuration is deployment-controlled, never
+chosen by an untrusted client or by a token's claims.
+
+| Configuration | Default | Clock starts at | Purpose |
+| --- | --- | --- | --- |
+| `assertion_lifetime_seconds` | 600 (10 minutes) | `iat`, original assertion issuance | Limits how long an issued assertion can be accepted. |
+| `max_verification_age_seconds` | 900 (15 minutes) | `verified_at`, successful proof validation | Prevents delayed issuance from making old verification evidence fresh. |
+| `clock_tolerance_seconds` | 3 seconds | Applied during timestamp validation | Allows small differences between verifier and host clocks. |
+
+The separate email-proof lifetime remains ten minutes from proof creation. It
+limits when the user can complete verification, not when the host accepts the
+subsequently issued assertion.
+
+The verifier sets `exp = iat + assertion_lifetime_seconds` at original issuance.
+The host enforces its trusted configured maximum assertion lifetime as well as
+the signed expiration and maximum verification age. Configuration must specify
+positive integer lifetimes and a nonnegative integer clock tolerance, with
+checked timestamp arithmetic. Deploy issuer and consumer settings coherently;
+a host may enforce stricter policy. Increasing configuration never rewrites or
+extends an existing signed expiration.
+
+With `now` sampled at host acceptance and `S` the configured tolerance, require:
+
+```text
+verified_at <= iat < exp
+exp - iat <= host_config.assertion_lifetime_seconds
+iat <= now + S
+verified_at <= now + S
+now < exp + S
+now < verified_at + host_config.max_verification_age_seconds + S
+now < host_pending_operation_deadline
+```
+
+The host-owned operation deadline receives no additional tolerance in this
+profile. Apply tolerance once to each relevant comparison, not cumulatively.
+It does not change signed timestamps or excuse invalid bindings, signatures,
+revoked keys, or previously consumed operations. Keep clocks synchronized;
+tolerance is not an allowance for arbitrary processing delays.
+
+Both post-verification limits run in parallel. The effective acceptance deadline
+is the earliest of signed expiration plus tolerance, verification time plus
+maximum age plus tolerance, and the host's own operation deadline.
+
+#### Examples with the default configuration
+
+Assume verification succeeds at 12:00:00, all other checks pass, the operation
+is still pending, and its host deadline is later than the shown times.
+
+| Scenario | Assertion issuance | Signed expiration | Verification-age deadline before tolerance | Host acceptance |
+| --- | --- | --- | --- | --- |
+| Immediate issuance | 12:00:00 | 12:10:00 | 12:15:00 | Accept at 12:09:00; time checks permit 12:10:02; reject at 12:10:03. |
+| Issuance delayed seven minutes | 12:07:00 | 12:17:00 | 12:15:00 | Accept at 12:14:00; time checks permit 12:15:02; reject at 12:15:03 even though the JWT has not reached `exp`. |
+
+If the host's pending-operation deadline is 12:08:00, both examples must instead
+reject at or after 12:08:00. Delivery retries retain the original assertion,
+identifiers, timestamps, and expiration. They never restart either clock.
+Once the host has atomically accepted and recorded durable work, that work may
+finish after expiration; retries of the work do not constitute a fresh acceptance.
+If no acceptance occurred before the effective deadline, require new verification.
+
+Test both deadlines independently, future timestamps, exact tolerance boundaries,
+shorter host deadlines, configuration changes, and retries without renewal.
 
 ### ID encoding and email comparison
 
@@ -360,7 +427,6 @@ does not revoke signatures validated with a downloaded public key.
 
 ### Decisions still open for this item
 
-- Assertion lifetime, maximum verification age, and clock tolerance.
 - Rotation cadence, cache/refresh limits, propagation checks, and old-key retention.
 - Emergency revocation distribution and recovery behavior.
 
