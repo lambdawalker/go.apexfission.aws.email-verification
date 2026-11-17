@@ -4,7 +4,8 @@
 
 Status: agreed confirmation and durability design; not implemented. Operation and
 state names below describe the logical contract. Exact wire names, retry credentials
-and result-delivery transport remain to be finalized.
+and concrete transport remain to be finalized. See the agreed
+[result-delivery semantics](result-delivery.md).
 
 ## Confirmation inputs and validation
 
@@ -125,6 +126,7 @@ document does not authorize anonymous status or assertion retrieval.
 ## Remaining decisions
 
 Define retry/status authorization, exact errors and wire fields, durable claim
-reservation and worker fencing, recovery scheduling and retention. Next, settle
-trusted result delivery, host acknowledgment and client completion behavior.
+reservation and worker fencing, recovery scheduling and retention.
+[Result delivery, host acknowledgment and client completion ownership](result-delivery.md)
+are decided; concrete transport and authorization details remain open.
 See [assertion timing](assertions.md) and [host acceptance](architecture.md#replay-prevention-and-crash-recovery).
