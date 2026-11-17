@@ -431,7 +431,7 @@ revoked keys are never accepted through the stale-cache allowance.
 Refreshing KMS public-key bytes alone is not an authoritative refresh of the
 application's allowed-key set. The direct AWS adapter needs a trusted, refreshable
 source for allowed kid-to-immutable-ARN mappings and retirement/revocation state.
-Its storage and emergency distribution mechanism remain to be designed. The
+Use the authoritative S3 key-status document and emergency procedure below. The
 HTTPS route must likewise refresh the authoritative published trust set, accounting
 for upstream caches rather than treating an old response as new trust information.
 
@@ -560,7 +560,7 @@ remains a separate open policy.
   must never re-enable a retired/revoked key or reset trust-information freshness.
 - Emergency recovery requires an independently authenticated administrative
   update of trust configuration; do not rely solely on authorization signed by
-  the compromised key. Its exact distribution procedure remains open.
+  the compromised key. Use the administrative recovery and distribution procedure below.
 - Immutability preserves what was written, including any malicious record written
   by an authorized attacker. It does not prove the original record was legitimate.
 - A separate key-management authority remains a possible future enhancement,
@@ -585,11 +585,77 @@ Compromise response is separate from routine rotation: consumers must be able to
 reject a revoked key even before its assertions expire. Disabling a KMS key alone
 does not revoke signatures validated with a downloaded public key.
 
+### Emergency revocation distribution and recovery
+
+Decision: maintain one authoritative key-status document in S3, separate from
+the immutable public-key archive. It lists allowed keys and permanent revoked
+key IDs scoped to the issuer, including revocation time, reason and a monotonically
+increasing status revision. Keep version history for audit. Never reuse a revoked
+key ID. Historical signed archive records cannot override current status.
+
+Direct AWS consumers read the status document through the AWS SDK from a
+deployment-configured trusted location; HTTPS consumers read the same status via
+a companion endpoint alongside JWKS. A standard JWKS alone does not convey
+revocation history. Both adapters apply the selected 300-second refresh age,
+30-second refresh cooldown and 900-second maximum age. A known revocation
+overrides cached authorization immediately; unknown status is not authorization.
+Validate status and key-set consistency before acceptance, rejecting ambiguous
+or inconsistent views. Source authentication, freshness and rollback protection
+must not depend solely on the possibly compromised assertion signing key.
+Specify the wire schema, endpoint path and revision/freshness validation details
+during implementation; preserve previously learned revocations.
+
+A separate administrative role controls trust-status publication and emergency
+replacement. The verifier runtime cannot modify the allowed/revoked list.
+Authenticate recovery through independently trusted AWS administrative access.
+A compromised key's signature cannot by itself approve its replacement, even
+though ordinary archived key records are signed with the current assertion key.
+
+Emergency procedure:
+1. Stop use of the affected signing key, contain compromised credentials and
+   permissions, and raise the operational alert.
+2. Publish permanent revocation through the authoritative status source and both
+   supported retrieval routes. Do not wait for outstanding assertions to expire.
+3. Establish and administratively authorize a clean replacement key after
+   containing the compromise; verify publication and resume signing. Emergency
+   replacement bypasses the routine seven-day publication lead time.
+4. Preserve audit history and assess affected assertions, key records and host
+   actions. If no trustworthy replacement is ready, signing remains unavailable.
+
+Consumers reject every newly presented assertion from a known revoked key,
+including unexpired assertions claiming an issuance time before revocation.
+An attacker with signing access can forge issuance timestamps. Distribution is
+not instantaneous: the cache policy permits stale trust information until its
+maximum age during outages. Failed refresh never renews that age, and a revoked
+key never receives a stale-cache allowance.
+
+#### Host-owned review of previously accepted proofs
+
+At atomic acceptance, the host durably records issuer, signing key ID, assertion
+ID, transaction/operation linkage, host acceptance time, and the rights or other
+effects derived from that proof. Index or otherwise support lookup by issuer and
+key ID. Do not rely solely on a token's claimed issuance time to bound exposure.
+
+When the host learns of revocation, it rejects new assertions from that key and
+starts a durable, idempotent, retryable review of affected accepted proofs and
+their derived grants. The host determines which rights or sessions to suspend or
+revoke, and which actions require investigation or compensating work. Revocation
+does not automatically reverse irreversible actions or revoke unrelated rights
+supported by independent evidence. Preserve progress, audit outcomes and alert
+on remediation failures. Account for acceptance/revocation races so affected
+records are eventually included.
+
+This review belongs to the host, which owns the accounts, permissions and
+acceptance records. No new remediation Lambda is required in the verifier; the
+host may use its existing background-work mechanism. Previously accepted work
+is subject to this incident policy, rather than blindly continuing a grant after
+the host knows its supporting key was revoked.
+
 ### Decisions still open for this item
 
 - Exact S3 immutability controls and signed-record serialization/profile.
 - Retired private KMS-key retention/deletion policy.
-- Emergency revocation distribution and recovery behavior.
+- Key-status wire schema, companion endpoint path, and concrete freshness/rollback checks.
 
 References: [JWT (RFC 7519)](https://www.rfc-editor.org/rfc/rfc7519.html),
 [JWT validation guidance (RFC 8725)](https://www.rfc-editor.org/rfc/rfc8725.html),
