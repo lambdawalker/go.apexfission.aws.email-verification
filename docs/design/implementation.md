@@ -9,7 +9,9 @@
   route, ES256 selection, and operational timing defaults are recorded there.
 - Implement the agreed [initiation contract](initiation.md), including authorized
   start and idempotency. Finalize its transport, retention and delivery details.
-- Define confirmation, result delivery, recovery and client completion contracts
+- Implement [confirmation and recoverable issuance](confirmation.md); finalize
+  retry authorization, claim reservation and worker fencing.
+- Define result delivery, host acknowledgment and client completion contracts
   for direct-call and separate-Lambda deployments.
 - Move eligibility, Cognito enrollment and grants/session code to the host side;
   remove their permissions and integration requirements from the verifier.
