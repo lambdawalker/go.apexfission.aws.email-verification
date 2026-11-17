@@ -76,3 +76,9 @@ The [test-host guide](docs/design/test-host.md) covers a private, IAM-only Lambd
 host, its separate Composer stack, SES email, background worker, deployment
 commands and diagrams. Its implementation lives under `internal`; other apps
 continue importing the public library. No public endpoint is created.
+
+## Deployment wizard
+
+Run `./deploy.sh` or `deploy.bat` for guided test-host deployment. See the
+[deployment wizard guide](docs/design/deployment-wizard.md) for SSO, S3 state,
+saved settings, previews, reports and manual GitHub Actions setup.

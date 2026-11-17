@@ -3,3 +3,6 @@ build/
 **/Pulumi.*.yaml
 **/Pulumi.*.json
 __pycache__/
+
+.deploy/
+dist/

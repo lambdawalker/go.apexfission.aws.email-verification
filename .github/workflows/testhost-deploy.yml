@@ -1,0 +1,63 @@
+name: Deploy email verification test host
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Protected benchmark GitHub environment (never prod)
+        required: true
+        default: testhost-dev
+      target:
+        description: Isolated stack environment
+        required: true
+        default: dev
+      action:
+        type: choice
+        options: [preview, deploy, status]
+        default: preview
+permissions:
+  contents: read
+  id-token: write
+concurrency:
+  group: testhost-${{ inputs.target }}
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      PROJECT: ${{ vars.BENCH_PROJECT }}
+      TARGET: ${{ inputs.target }}
+      ACTION: ${{ inputs.action }}
+      SENDER: ${{ vars.BENCH_SENDER }}
+      RECIPIENT: ${{ vars.BENCH_RECIPIENT }}
+      DOMAIN: ${{ vars.BENCH_DOMAIN }}
+      BENCH_ACCOUNT: ${{ vars.BENCH_ACCOUNT }}
+      BENCH_REGION: ${{ vars.BENCH_REGION }}
+      BENCH_BACKEND: ${{ vars.BENCH_BACKEND }}
+      BENCH_ENVIRONMENT: ${{ vars.BENCH_ENVIRONMENT }}
+      ROLE: ${{ vars.BENCH_ROLE_ARN }}
+      PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 1.27.3
+      - name: Validate explicit inputs
+        shell: bash
+        run: |
+          test -n "$PROJECT"
+          test "$TARGET" = "$BENCH_ENVIRONMENT"
+          test "$TARGET" != prod
+          test -n "$BENCH_ACCOUNT" && test -n "$BENCH_REGION" && test -n "$BENCH_BACKEND" && test -n "$ROLE" && test -n "$PULUMI_CONFIG_PASSPHRASE"
+          [[ "$ACTION" =~ ^(preview|deploy|status)$ ]]
+          test -n "$SENDER" && test -n "$RECIPIENT" && test -n "$DOMAIN"
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.BENCH_ROLE_ARN }}
+          aws-region: ${{ vars.BENCH_REGION }}
+          allowed-account-ids: ${{ vars.BENCH_ACCOUNT }}
+      - uses: pulumi/actions@v6
+      - name: Run shared deployment program
+        shell: bash
+        run: |
+          ./deploy.sh --project "$PROJECT" --non-interactive --approve --environment "$TARGET" --action "$ACTION" --account "$BENCH_ACCOUNT" --region "$BENCH_REGION" --backend "$BENCH_BACKEND" --sender "$SENDER" --recipient "$RECIPIENT" --domain "$DOMAIN"
