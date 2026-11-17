@@ -82,3 +82,20 @@ Monitoring references:
 [CloudWatch alarms](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Alarms.html),
 [alarm notifications](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Notify_Users_Alarm_Changes.html).
 
+
+## Design diagram
+
+```mermaid
+flowchart TD
+ Q["Validation request"] --> R{"Refresh due or key unknown?"}
+ R -->|Yes| F["Attempt bounded authoritative refresh"]
+ F --> S{"Validation and persistence succeed?"}
+ S -->|Yes| U["Update cache and freshness"]
+ S -->|No| C{"Known trusted key and cache age below 900 seconds?"}
+ R -->|No| C
+ C -->|Yes| V["Run all assertion checks"]
+ C -->|No| B["Block acceptance and emit signal"]
+ U --> V
+ B --> M["CloudWatch alarm"]
+ M --> N["SNS confirmed recipients"]
+```
