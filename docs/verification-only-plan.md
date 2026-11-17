@@ -25,6 +25,7 @@ endpoint is required for these calls. Separate-service deployment is deferred to
 | [Verification initiation](design/initiation.md) | Authorized start, idempotency and delivery diagrams |
 | [Confirmation and recoverable issuance](design/confirmation.md) | Atomic proof consumption and signing recovery |
 | [Result delivery and acknowledgment](design/result-delivery.md) | Trusted handoff, duplicate delivery and client completion |
+| [Client status authorization](design/client-status.md) | Read-only token, lifetime and recovery |
 | [Assertions and acceptance timing](design/assertions.md) | Core design |
 | [Signing and key distribution](design/keys/signing-and-distribution.md) | Key management |
 | [Cache policy and operational alerts](design/operations/cache-and-alerts.md) | Host operations |
@@ -39,8 +40,9 @@ endpoint is required for these calls. Separate-service deployment is deferred to
 Authorized initiation and start idempotency are recorded in [Verification initiation](design/initiation.md).
 Confirmation and durable issuance are recorded in [Confirmation](design/confirmation.md).
 Trusted result delivery, acknowledgment and client completion ownership are recorded
-in [Result delivery](design/result-delivery.md). The default is in-process library integration. Next: client retry/status
-authorization, response fields, retry settings and retention. Service-to-service
+in [Result delivery](design/result-delivery.md). The default is in-process library integration. [Client status authorization](design/client-status.md) now records the read-only
+operation token and thirty-minute default. Next: retry settings and retention,
+then remaining response fields and credential implementation details. Service-to-service
 authentication details are deferred to the separate-deployment document.
 Host-owned durable rollback storage and atomic concurrent updates are decided;
 exact digest representation and retry bounds remain implementation details.
