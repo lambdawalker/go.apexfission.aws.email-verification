@@ -3,8 +3,6 @@ package main
 
 import (
 	"archive/zip"
-	"bufio"
-	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -33,11 +31,7 @@ type Settings struct {
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "--prompt-child" {
-		line, err := bufio.NewReader(os.Stdin).ReadString('\n')
-		if err != nil || strings.ContainsAny(line, "\x1b\x03") {
-			os.Exit(2)
-		}
-		fmt.Print(strings.TrimSpace(line))
+		relayPromptInput(os.Stdin, os.Stdout)
 		return
 	}
 
@@ -103,62 +97,6 @@ func readApproval(defaultYes bool) int {
 	return 2
 }
 
-func prompt(label, def string) string {
-	fmt.Printf("  %s [%s]: ", label, def)
-	exe, e := os.Executable()
-	if e != nil {
-		panic(e)
-	}
-	c := exec.Command(exe, "--prompt-child")
-	c.Stdin = os.Stdin
-	var out bytes.Buffer
-	c.Stdout = &out
-	if e = c.Start(); e != nil {
-		panic(e)
-	}
-	done := make(chan error, 1)
-	go func() { done <- c.Wait() }()
-	defer func() {
-		if c.Process != nil {
-			_ = c.Process.Kill()
-		}
-	}()
-	if def == "" {
-		if e = <-done; e != nil {
-			panic("input closed; cancelled")
-		}
-	} else {
-		terminal := interactiveOutput()
-		defer finishCountdown(os.Stdout, terminal)
-		for i := 5; i > 0; i-- {
-			if terminal {
-				fmt.Printf("\r  %s [%s] — default in %ds: ", label, def, i)
-			} else if i == 5 {
-				fmt.Printf("Enter accepts %s; default in five seconds.\n", def)
-			}
-			select {
-			case e = <-done:
-				if e != nil {
-					panic("input closed; cancelled")
-				}
-				value := strings.TrimSpace(out.String())
-				if value == "" {
-					return def
-				}
-				return value
-			case <-time.After(countdownStep):
-			}
-		}
-		_ = c.Process.Kill()
-		<-done
-		return def
-	}
-	value := strings.TrimSpace(out.String())
-	if value == "" {
-		return def
-	}
-	return value
-}
 func secret(label string) (string, error) {
 	fmt.Fprintln(os.Stderr, label)
 	var c *exec.Cmd
