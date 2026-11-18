@@ -1,7 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` launch the same Go program in `cmd/deploy`,
-adapted from the card-capture deployment wizard. It deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/cfce9564fec239531a392b37078a8ccc350c28cd/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. No admin/index component or public API is involved.
 
@@ -22,6 +21,7 @@ SSO when needed and displays the target before proceeding. Saved answers are
 reused. At a text prompt with a default, typing stops the five-second countdown
 and lets you finish editing. Press Enter to submit or Escape to cancel. Pressing
 Enter on an empty line selects the displayed default. Project/environment values are isolated; account mismatches stop the run.
+Existing state URLs, settings, and vaults are reused from the same checkout.
 The Pulumi project stays `email-verification-testhost`, with stacks `test-<environment>`.
 Use dev, qa or a custom test environment; production environments are refused.
 
@@ -110,13 +110,14 @@ Authenticate `gh` with environment administration rights. Setup verifies the
 repository/session, checks the existing environment, reconciles managed variables
 and transfers `PULUMI_CONFIG_PASSPHRASE` via stdin. It preserves protections and
 unrelated settings. Permission failures report incomplete setup. Secret delivery
-cannot be read back; explicit setup redelivers the passphrase. Nothing dispatches
-a deployment automatically.
+cannot be read back. Change `--github-secret-version` or use `--force-reconcile`
+to redeliver the existing passphrase. Nothing dispatches a deployment automatically.
 
 Managed variables: `BENCH_PROJECT`, `BENCH_ACCOUNT`, `BENCH_REGION`, `BENCH_BACKEND`,
 `BENCH_ENVIRONMENT`, `BENCH_ROLE_ARN`, `BENCH_SENDER`, `BENCH_RECIPIENT`, `BENCH_DOMAIN`.
 These names retain compatibility with the source wizard. Select the matching
 protected environment and target in Actions. Inputs must match its saved scope.
+Select the approval checkbox when choosing the deploy action.
 Noninteractive deploy requires explicit `--action deploy --approve`; omitted action
 is preview. CI requires complete settings and never starts SSO or bootstraps state.
 
