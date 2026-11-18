@@ -11,7 +11,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.40.0
 	github.com/lambdawalker/go.infra.composer v0.0.0-20261103235125-ad4cfd268616
-	golang.org/x/term v0.35.0
 )
 
 require (
@@ -28,5 +27,4 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
-	golang.org/x/sys v0.36.0 // indirect
 )
