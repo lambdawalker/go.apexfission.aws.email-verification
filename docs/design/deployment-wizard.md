@@ -19,7 +19,9 @@ Pulumi CLI v3 and an AWS IAM Identity Center profile. Run from any directory:
 First setup asks for project identity, then environment, AWS profile/region,
 state storage and passphrases. It discovers account/role through STS, logs into
 SSO when needed and displays the target before proceeding. Saved answers are
-reused. Project/environment values are isolated; account mismatches stop the run.
+reused. At a text prompt with a default, typing stops the five-second countdown
+and lets you finish editing. Press Enter to submit or Escape to cancel. Pressing
+Enter on an empty line selects the displayed default. Project/environment values are isolated; account mismatches stop the run.
 The Pulumi project stays `email-verification-testhost`, with stacks `test-<environment>`.
 Use dev, qa or a custom test environment; production environments are refused.
 
