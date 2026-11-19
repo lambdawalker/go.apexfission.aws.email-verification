@@ -36,6 +36,7 @@ jobs:
       SENDER: ${{ vars.BENCH_SENDER }}
       RECIPIENT: ${{ vars.BENCH_RECIPIENT }}
       DOMAIN: ${{ vars.BENCH_DOMAIN }}
+      DNS_PROVIDER: ${{ vars.BENCH_DNS_PROVIDER }}
       BENCH_ACCOUNT: ${{ vars.BENCH_ACCOUNT }}
       BENCH_REGION: ${{ vars.BENCH_REGION }}
       BENCH_BACKEND: ${{ vars.BENCH_BACKEND }}
@@ -57,6 +58,10 @@ jobs:
           [[ "$ACTION" =~ ^(preview|deploy|status)$ ]]
           if [[ "$ACTION" == deploy ]]; then test "$APPROVE" = true; fi
           test -n "$SENDER" && test -n "$RECIPIENT" && test -n "$DOMAIN"
+          if [[ "$ACTION" != status && -z "$DNS_PROVIDER" ]]; then
+            echo "Set BENCH_DNS_PROVIDER using the GitHub setup wizard before preview or deploy."
+            exit 1
+          fi
       - uses: aws-actions/configure-aws-credentials@v5
         with:
           role-to-assume: ${{ vars.BENCH_ROLE_ARN }}
@@ -68,4 +73,4 @@ jobs:
         run: |
           approval=()
           if [[ "$ACTION" == deploy && "$APPROVE" == true ]]; then approval+=(--approve); fi
-          ./deploy.sh --project "$PROJECT" --non-interactive "${approval[@]}" --environment "$TARGET" --action "$ACTION" --account "$BENCH_ACCOUNT" --region "$BENCH_REGION" --backend "$BENCH_BACKEND" --sender "$SENDER" --recipient "$RECIPIENT" --domain "$DOMAIN"
+          ./deploy.sh --project "$PROJECT" --non-interactive "${approval[@]}" --environment "$TARGET" --action "$ACTION" --account "$BENCH_ACCOUNT" --region "$BENCH_REGION" --backend "$BENCH_BACKEND" --sender "$SENDER" --recipient "$RECIPIENT" --domain "$DOMAIN" --dnsprovider "$DNS_PROVIDER"
