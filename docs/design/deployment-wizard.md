@@ -37,10 +37,19 @@ never saved. The Pulumi passphrase is passed through the process environment.
 Keep backups of the vault, unlock password, state URL and Pulumi passphrase.
 S3 encryption, Pulumi secret encryption and the local vault are distinct protections.
 
-Required host settings are `--sender`, `--recipient` and `--domain`, or interactive
-answers. They are remembered per environment. The domain is ownership metadata,
-not a hosted endpoint. Verify the SES sender and, in sandbox accounts, the recipient
-before using the [test client](test-host.md#run-an-email-verification).
+The wizard remembers these required inputs per environment.
+
+| Prompt | Example | What to do |
+| --- | --- | --- |
+| SES From address (`--sender`) | `verify-demo@example.com` | Use a full address whose inbox you can access. After deployment creates the SES email identity, open the verification link sent to that address. |
+| Test recipient (`--recipient`) | `tester@example.com` | Use the full address that will receive the code. In the SES sandbox, verify it in the deployment's AWS region before testing. |
+| Ownership domain (`--domain`) | `example.com` | Use a domain value for resource tags and reports. The wizard does not host a URL on this domain. |
+
+This test stack uses an SES email-address identity. **No new DNS records are
+required.** If you separately set up an SES domain identity with Easy DKIM, use
+the CNAME records SES provides. An A record does not verify the sender.
+See [SES identity verification](https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html)
+and the [test client instructions](test-host.md#run-an-email-verification).
 
 ## Actions
 

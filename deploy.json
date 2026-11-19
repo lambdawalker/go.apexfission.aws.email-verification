@@ -13,9 +13,9 @@
   "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired"],
   "InputsFile": "testhost.json",
   "Inputs": [
-    {"Name": "Sender", "Label": "Dedicated SES sender", "Kind": "email", "GitHubVariable": "BENCH_SENDER"},
-    {"Name": "Recipient", "Label": "Allowed test recipient", "Kind": "email", "GitHubVariable": "BENCH_RECIPIENT"},
-    {"Name": "Domain", "Label": "Ownership domain", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"}
+    {"Name": "Sender", "Label": "SES From address (full email you can verify)", "Kind": "email", "GitHubVariable": "BENCH_SENDER"},
+    {"Name": "Recipient", "Label": "Test recipient (full email, verified in SES sandbox)", "Kind": "email", "GitHubVariable": "BENCH_RECIPIENT"},
+    {"Name": "Domain", "Label": "Ownership domain (resource tags only, no DNS setup)", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"}
   ],
   "ConfigDefaults": {"policyJSON": "{}"},
   "GitHub": {"Workflow": "testhost-deploy.yml", "EnvironmentPrefix": "testhost-"}
