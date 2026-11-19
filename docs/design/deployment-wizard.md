@@ -1,13 +1,14 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/a46d6c56904e539237e21006eff861f066d76645/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/d96e727bdb02c684d60993a9825998b7440b56a2/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. No admin/index component or public API is involved.
 
 ## First run and reruns
 
 Install Go 1.25+ (infrastructure automatically selects Go 1.27.3+), AWS CLI v2,
-Pulumi CLI v3 and an AWS IAM Identity Center profile. Run from any directory:
+Pulumi CLI v3 and an AWS IAM Identity Center profile. Start the terminal wizard
+from the repository:
 
 ```sh
 ./deploy.sh
@@ -16,9 +17,9 @@ Pulumi CLI v3 and an AWS IAM Identity Center profile. Run from any directory:
 ```
 
 The wizard asks for the local vault passphrase first. It then collects settings
-and displays them for review before AWS or GitHub sign-in. Use Tab and Enter
-to edit a field, or the numbered menu in a smaller terminal. Ctrl+Q exits
-any wizard prompt or review. At a text prompt with a default, typing stops
+and displays them for review before AWS or GitHub sign-in. In terminal mode,
+use Tab and Enter to edit a field, or the numbered menu in a smaller terminal.
+Ctrl+Q exits a prompt or review. At a text prompt with a default, typing stops
 the five-second countdown and Enter submits the current answer.
 
 Project and environment select the saved deployment scope. Use dev, qa, or a
@@ -51,6 +52,24 @@ disabled. The wizard displays provider guidance and saves the selection.
 See [SES identity verification](https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html)
 and the [test client instructions](test-host.md#run-an-email-verification).
 
+## Browser mode
+
+```sh
+./deploy.sh --server
+# Windows:
+# deploy.bat --server
+```
+
+The launcher starts a local website. The page lets you choose an action,
+review or edit settings, follow sign-in instructions, and see the Pulumi plan
+and deployment progress. Preview is preselected when you start without
+`--action`. Applying the saved plan requires an explicit click. Add
+`--no-open` to print the URL without opening the browser.
+
+Use **Stop wizard** to cancel the run and **Close wizard** to end the local
+session after reviewing the result. Terminal and noninteractive runs remain
+available through the same launcher.
+
 ## Actions
 
 ```sh
@@ -64,7 +83,7 @@ and the [test client instructions](test-host.md#run-an-email-verification).
 ./deploy.sh --reconfigure --action setup
 ```
 
-Plain interactive invocation defaults to deploy: build, successful preview, then
+A plain terminal invocation defaults to deploy: build, successful preview, then
 “Deploy the previewed changes? [Y/n]”. Enter/yes applies immediately; five seconds
 without input applies that saved plan. No/Escape/Ctrl+C/EOF cancels. Required text,
 secret entry and destructive confirmations never receive timeout approval.
