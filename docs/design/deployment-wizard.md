@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/cfce9564fec239531a392b37078a8ccc350c28cd/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/a46d6c56904e539237e21006eff861f066d76645/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. No admin/index component or public API is involved.
 
@@ -15,20 +15,17 @@ Pulumi CLI v3 and an AWS IAM Identity Center profile. Run from any directory:
 # deploy.bat
 ```
 
-First setup asks for project identity, then environment, AWS profile/region,
-state storage and passphrases. It discovers account/role through STS, logs into
-SSO when needed and displays the target before proceeding. Saved answers are
-reused. At a text prompt with a default, typing stops the five-second countdown
-and lets you finish editing. Press Enter to submit or Escape to cancel. Pressing
-Enter on an empty line selects the displayed default. Project/environment values are isolated; account mismatches stop the run.
-Existing state URLs, settings, and vaults are reused from the same checkout.
-The Pulumi project stays `email-verification-testhost`, with stacks `test-<environment>`.
-Use dev, qa or a custom test environment; production environments are refused.
+The wizard asks for the local vault passphrase first. It then collects settings
+and displays them for review before AWS or GitHub sign-in. Use Tab and Enter
+to edit a field, or the numbered menu in a smaller terminal. Ctrl+Q exits
+any wizard prompt or review. At a text prompt with a default, typing stops
+the five-second countdown and Enter submits the current answer.
 
-The wizard asks whether you have an S3 bucket for deployment state. The default
-no answer creates a collision-safe encrypted, versioned bucket with public-access
-blocking and TLS enforcement. An existing bucket is checked before use. Previously
-configured storage is never silently replaced after an access failure.
+Project and environment select the saved deployment scope. Use dev, qa, or a
+custom test environment. The Pulumi project is `email-verification-testhost`,
+with stacks named `test-<environment>`. For first setup, enter an S3 state URL
+or select `new` to create an encrypted, versioned bucket. Existing targets
+are checked against the signed-in account and verified S3 state.
 
 Nonsecret records live under `~/.infra-composer/<project>/environments/<environment>/`.
 Repository `.deploy/` holds identity/flag snapshots and an encrypted local vault.
@@ -37,10 +34,22 @@ never saved. The Pulumi passphrase is passed through the process environment.
 Keep backups of the vault, unlock password, state URL and Pulumi passphrase.
 S3 encryption, Pulumi secret encryption and the local vault are distinct protections.
 
-Required host settings are `--sender`, `--recipient` and `--domain`, or interactive
-answers. They are remembered per environment. The domain is ownership metadata,
-not a hosted endpoint. Verify the SES sender and, in sandbox accounts, the recipient
-before using the [test client](test-host.md#run-an-email-verification).
+The wizard remembers these required inputs per environment.
+
+| Prompt | Example | What to do |
+| --- | --- | --- |
+| SES From address (`--sender`) | `verify-demo@example.com` | Use a full address whose inbox you can access. After deployment creates the SES email identity, open the verification link sent to that address. |
+| Test recipient (`--recipient`) | `tester@example.com` | Use the full address that will receive the code. In the SES sandbox, verify it in the deployment's AWS region before testing. |
+| Ownership domain (`--domain`) | `example.com` | Use a domain value for resource tags and reports. The wizard does not host a URL on this domain. |
+| Sender domain's public DNS provider (`--dnsprovider`) | `route53` or `cloudflare` | Pick the provider that serves the public DNS for the domain in the From address. The registrar may be different. |
+
+This test stack uses an SES email-address identity. **No new DNS records are
+required.** The DNS provider choice is saved for domain setup. If you separately
+set up an SES domain identity with Easy DKIM, add the CNAME records SES provides
+in the delegated Route 53 public hosted zone or in Cloudflare DNS with proxying
+disabled. The wizard displays provider guidance and saves the selection.
+See [SES identity verification](https://docs.aws.amazon.com/ses/latest/dg/creating-identities.html)
+and the [test client instructions](test-host.md#run-an-email-verification).
 
 ## Actions
 
@@ -82,8 +91,10 @@ environment maps, state payloads and credentials.
 
 ```mermaid
 flowchart TD
-    I["Project and environment"] --> A["SSO and target verification"]
-    A --> S["S3 state and encrypted vault"]
+    I["Enter vault passphrase"] --> F["Collect settings and DNS provider"]
+    F --> V["Review and edit settings"]
+    V --> A["SSO and target verification"]
+    A --> S["Verify S3 state"]
     S --> R["Discover stack and restore configuration"]
     R --> B["Build or reuse verified ZIP"]
     B --> P["Preview and save plan"]
@@ -114,8 +125,9 @@ cannot be read back. Change `--github-secret-version` or use `--force-reconcile`
 to redeliver the existing passphrase. Nothing dispatches a deployment automatically.
 
 Managed variables: `BENCH_PROJECT`, `BENCH_ACCOUNT`, `BENCH_REGION`, `BENCH_BACKEND`,
-`BENCH_ENVIRONMENT`, `BENCH_ROLE_ARN`, `BENCH_SENDER`, `BENCH_RECIPIENT`, `BENCH_DOMAIN`.
-These names retain compatibility with the source wizard. Select the matching
+`BENCH_ENVIRONMENT`, `BENCH_ROLE_ARN`, `BENCH_SENDER`, `BENCH_RECIPIENT`, `BENCH_DOMAIN`,
+and `BENCH_DNS_PROVIDER`. For an existing GitHub environment, rerun GitHub setup
+once to set the DNS provider before preview or deploy. Select the matching
 protected environment and target in Actions. Inputs must match its saved scope.
 Select the approval checkbox when choosing the deploy action.
 Noninteractive deploy requires explicit `--action deploy --approve`; omitted action
