@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/437d27e6eea57c189cb845708f51e2df02b53e6b/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/75fae6a2d1647c6914b885fc025f5fc2e38fea6d/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. No admin/index component or public API is involved.
 
@@ -69,11 +69,16 @@ and the [test client instructions](test-host.md#run-an-email-verification).
 Use `--server` to open the browser directly or `--terminal` to go straight
 to the terminal wizard. The same flags work on both launchers.
 
-The browser opens a local website. The page lets you choose an action,
-review or edit settings, follow sign-in instructions, and see the Pulumi plan
-and deployment progress. Preview is preselected when you start without
-`--action`. Applying the saved plan requires an explicit click. Add
-`--no-open` to print the URL without opening the browser.
+The browser opens a local website. When you start without `--action`, each
+available action has a card that explains what it does. Preview is selected
+by default.
+
+After choosing the deployment scope, enter or review the SES From address,
+test recipient, ownership domain, DNS provider, and AWS settings in a single
+form. Continue validates the form and saves the accepted project inputs as
+defaults for that environment. The wizard then displays sign-in instructions
+and deployment progress. Applying a saved Pulumi plan requires an explicit
+click. Add `--no-open` to print the URL without opening the browser.
 
 Use **Stop wizard** to cancel the run and **Close wizard** to end the local
 session after reviewing the result. Terminal and noninteractive runs remain
