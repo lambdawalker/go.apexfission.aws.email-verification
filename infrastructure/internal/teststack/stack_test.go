@@ -29,6 +29,26 @@ func (m *mocks) NewResource(a pulumi.MockResourceArgs) (string, resource.Propert
 	out["name"] = resource.NewStringProperty(a.Name)
 	out["arn"] = resource.NewStringProperty("arn:aws:mock::123:" + a.Name)
 	out["keyId"] = resource.NewStringProperty("key-id")
+	switch a.TypeToken {
+	case "aws:acm/certificate:Certificate":
+		name := a.Inputs["domainName"].StringValue()
+		out["domainValidationOptions"] = resource.NewArrayProperty([]resource.PropertyValue{resource.NewObjectProperty(resource.PropertyMap{
+			"domainName": resource.NewStringProperty(name), "resourceRecordName": resource.NewStringProperty("_proof." + name),
+			"resourceRecordType": resource.NewStringProperty("CNAME"), "resourceRecordValue": resource.NewStringProperty("_token.acm-validations.aws."),
+		})})
+	case "aws:route53/record:Record":
+		out["fqdn"] = a.Inputs["name"]
+	case "cloudflare:index/dnsRecord:DnsRecord":
+		out["name"] = a.Inputs["name"]
+	case "aws:cognito/userPool:UserPool":
+		out["endpoint"] = resource.NewStringProperty("cognito-idp.us-east-2.amazonaws.com/demo-pool")
+	case "aws:apigatewayv2/api:Api":
+		out["executionArn"] = resource.NewStringProperty("arn:aws:execute-api:us-east-2:123456789012:demo")
+	case "aws:apigatewayv2/domainName:DomainName":
+		fields := a.Inputs["domainNameConfiguration"].ObjectValue().Copy()
+		fields["targetDomainName"] = resource.NewStringProperty("d-demo.execute-api.us-east-2.amazonaws.com")
+		out["domainNameConfiguration"] = resource.NewObjectProperty(fields)
+	}
 	if a.TypeToken == "random:index/randomBytes:RandomBytes" {
 		out["base64"] = resource.NewStringProperty(base64.StdEncoding.EncodeToString([]byte(strings.Repeat("x", 32))))
 	}

@@ -11,7 +11,7 @@
   "BucketPrefix": "testhost-state",
   "BuildPackage": "./cmd/testhost",
   "BuildDir": "dist/testhost",
-  "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired"],
+  "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired", "testHostMobileURL", "testHostMobileUserPoolID", "testHostMobileClientID", "testHostMobileIssuer"],
   "InputsFile": "testhost.json",
   "Inputs": [
     {"Name": "Sender", "Label": "SES From address", "Help": "Enter a full email address whose inbox you can access for SES verification.", "Kind": "email", "GitHubVariable": "BENCH_SENDER"},
@@ -19,6 +19,11 @@
     {"Name": "Domain", "Label": "Ownership domain", "Help": "Used for AWS resource tags and reports.", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
     {"Name": "DNSProvider", "Label": "Sender DNS provider", "Help": "Choose the provider serving public DNS for the domain in the From address.", "Kind": "dnsProvider", "GitHubVariable": "BENCH_DNS_PROVIDER"}
   ],
-  "ConfigDefaults": {"policyJSON": "{}"},
+  "ConfigDefaults": {
+    "policyJSON": "{}",
+    "mobileBaseDomain": "components.email-verification.apexfission.com",
+    "mobileDNSProvider": "route53",
+    "mobileDNSZone": "apexfission.com"
+  },
   "GitHub": {"Workflow": "testhost-deploy.yml", "EnvironmentPrefix": "testhost-"}
 }

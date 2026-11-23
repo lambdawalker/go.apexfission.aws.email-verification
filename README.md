@@ -72,10 +72,10 @@ The optional `infrastructure` module requires Go 1.27.3+; the runtime stays on G
 
 ## Isolated test host
 
-The [test-host guide](docs/design/test-host.md) covers a private, IAM-only Lambda
-host, its separate Composer stack, SES email, background worker, deployment
-commands and diagrams. Its implementation lives under `internal`; other apps
-continue importing the public library. No public endpoint is created.
+The [test-host guide](docs/design/test-host.md) covers an isolated Lambda stack
+for operator testing and an authenticated mobile demo API. The deployment wizard
+sets up an HTTPS hostname per environment. Applications that embed email
+verification continue importing the public library.
 
 ## Deployment wizard
 

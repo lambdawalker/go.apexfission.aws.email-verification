@@ -2,7 +2,7 @@
 
 The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/93c566061116ffa707b4ce44c5b76705527720ff/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
-without this wizard. No admin/index component or public API is involved.
+without this wizard. The test host has its own authenticated Android demo API.
 
 ## First run and reruns
 
@@ -89,6 +89,14 @@ separately and choose **Refresh AWS profiles**.
 Use **Stop wizard** to cancel the run and **Close wizard** to end the local
 session after reviewing the result. Terminal and noninteractive runs remain
 available through the same launcher.
+
+## Android demo endpoint
+
+Each wizard-managed stack derives its HTTPS hostname from the selected
+environment. For example, `dev` uses
+`https://dev.components.email-verification.apexfission.com`. Setup seeds the
+domain settings. Preview and Deploy include the certificate, DNS records,
+and authenticated API. See the [mobile demo contract and DNS settings](test-host.md#connect-an-android-demo).
 
 ## Actions
 

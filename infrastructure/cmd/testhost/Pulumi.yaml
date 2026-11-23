@@ -1,3 +1,3 @@
 name: email-verification-testhost
 runtime: go
-description: Isolated IAM-only email verification test host. Not a production application.
+description: Isolated email verification test host with an authenticated mobile demo API.

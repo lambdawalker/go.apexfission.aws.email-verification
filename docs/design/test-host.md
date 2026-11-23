@@ -13,7 +13,8 @@ The source remains visible in the repository.
 | --- | --- |
 | Verifier DynamoDB table and ES256 KMS key | Created through the existing Composer verification feature. Stores transactions and signs assertions. |
 | Separate host DynamoDB table | Stores fixed requests, preparation markers, dispatch, acceptance and the worker scan cursor. Never shares the real application's records. |
-| IAM-only Lambda | Imports the public verification library. Accepts authenticated operator start, confirm and status commands; the same executable runs worker ticks. No function URL or API Gateway is created. |
+| Test host Lambda | Imports the verification library. Accepts operator commands through IAM, signed-in mobile requests through API Gateway, and worker ticks from EventBridge. |
+| Mobile demo API | The deployment wizard configures a Regional API Gateway, validated ACM certificate, and public DNS for the selected environment. A dedicated Cognito user pool authenticates invited testers. |
 | SES sender identity | Dedicated test sender. Sends only the six-digit code to the configured recipient. Both code and IAM policy restrict the recipient. |
 | Secrets Manager secret | Two independently generated 32-byte keys for proof HMAC and recoverable email encryption. Pulumi protects secret state; Lambda gets only the secret ARN in its environment. |
 | EventBridge rule | Runs a worker every minute. Scans pages of five verifier records, up to 100 per invocation within the time budget, persists the pagination cursor and attempts one phase per record. |
@@ -21,7 +22,9 @@ The source remains visible in the repository.
 
 ```mermaid
 flowchart TD
-    C["Local client keeps secret A"] -->|"IAM Lambda invocation"| H["Internal test host"]
+    C["Local operator"] -->|"IAM Lambda invocation"| H["Test host"]
+    A["Android demo"] -->|"HTTPS with Cognito access token"| G["Environment API Gateway"]
+    G --> H
     E["Scheduled worker tick"] --> H
     H --> L["Public verification library"]
     H --> D["Host table"]
@@ -32,10 +35,9 @@ flowchart TD
     H --> S["Secrets Manager"]
 ```
 
-The test host fixes its host ID and audience from the project/stack. It permits
-only its configured test recipient. IAM `lambda:InvokeFunction` is the operator
-session; no extra client status token or login screen is needed. Anyone granted
-that permission can operate this test stack, so grant it only to test operators.
+The test host fixes its host ID and audience from the project and stack. It permits
+only its configured test recipient. Grant `lambda:InvokeFunction` only to test
+operators. Mobile operations are scoped to the authenticated Cognito user.
 The supplied client never returns an assertion or uses verification to log in.
 Host acceptance is the final tested result; `WorkPending` remains the library's
 business-work marker, and this host creates no account.
@@ -92,6 +94,54 @@ cd ../../..
 The operator needs `lambda:InvokeFunction` for the exported
 `testHostFunctionArn`; the deployment does not modify your human IAM principal.
 AWS credentials and region come from the normal AWS CLI profile/environment.
+
+## Connect an Android demo
+
+The wizard seeds `mobileBaseDomain` as `components.email-verification.apexfission.com`.
+The test stack name supplies the leading environment label.
+
+| Stack | Android API base URL |
+| --- | --- |
+| `test-dev` | `https://dev.components.email-verification.apexfission.com` |
+| `test-qa` | `https://qa.components.email-verification.apexfission.com` |
+
+Setup saves the stack defaults. Preview and Deploy include the endpoint resources.
+The default DNS zone is the public Route 53 zone for `apexfission.com`. In the
+test host Pulumi directory, use `pulumi config set` to override
+`mobileBaseDomain`, `mobileDNSZone`, or `mobileDNSZoneID` for a different
+domain or delegated zone. When using Cloudflare, set `mobileDNSProvider` to
+`cloudflare`, set `mobileDNSZoneID`, and provide `CLOUDFLARE_API_TOKEN`
+with DNS write access to that zone. For GitHub deployment, supply it as a
+protected environment secret. The SES sender and ownership metadata remain
+separate settings.
+
+The deployment role needs access to manage the demo's API Gateway, certificate,
+Cognito resources, and selected Route 53 zone if applicable. Inviting users to
+the demo pool is a separate operator action.
+
+After apply, use the Pulumi outputs `testHostMobileURL`,
+`testHostMobileUserPoolID`, `testHostMobileClientID`, and `testHostMobileIssuer`
+for the matching Android demo flavor. Invite demo users in that environment’s
+Cognito pool. The Android client signs in via SRP and uses the **access token**
+in the authorization header. An invitation and the existing SES sender and
+test-recipient verification are required for an end-to-end email demo.
+
+Send JSON with `Content-Type: application/json` and
+`Authorization: Bearer <access_token>`.
+
+| Endpoint | JSON fields |
+| --- | --- |
+| `POST /v1/verification/start` | `operation`, `email`, `challenge`, `authorized_at` |
+| `POST /v1/verification/confirm` | `operation`, `secret`, `code` |
+| `POST /v1/verification/status` | `operation` |
+
+Generate a random 32-byte operation ID and secret A on the client. Encode both
+as unpadded base64url. Hash the UTF-8 bytes of the encoded secret with SHA-256
+and encode the digest as unpadded base64url for `challenge`. Use an RFC 3339 timestamp for `authorized_at` and keep all
+start fields identical when retrying. Retain the operation ID and secret A
+until the session finishes. A successful confirmation can precede final host
+acceptance. Poll status for `accepted: true`, or stop on a terminal state
+such as `expired` or `attempts_exhausted`.
 
 ## Run an email verification
 
@@ -175,8 +225,8 @@ sequenceDiagram
 Root tests exercise start/retry, changed bindings, missing records, proof A,
 recipient restrictions, email, signing and acceptance across host recreation.
 AWS adapter tests use SDK fakes. Native Pulumi mocks check separate tables, native
-key bindings, secret marking, scoped IAM, scheduled work and absence of a public
-endpoint. `scripts/testhost-import-test.sh` compiles an external module and verifies
+key bindings, secret marking, scoped IAM, scheduled work, per-environment DNS,
+and JWT authorization on the mobile routes. `scripts/testhost-import-test.sh` compiles an external module and verifies
 that Go refuses its import of the internal host. CI also builds the deployable ZIP.
 These checks are local/mocked; actual SES delivery and AWS permissions require a
 live run in your selected test account.
