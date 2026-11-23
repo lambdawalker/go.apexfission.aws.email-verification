@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/d96e727bdb02c684d60993a9825998b7440b56a2/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/437d27e6eea57c189cb845708f51e2df02b53e6b/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. No admin/index component or public API is involved.
 
@@ -16,8 +16,14 @@ from the repository:
 # deploy.bat
 ```
 
-The wizard asks for the local vault passphrase first. It then collects settings
-and displays them for review before AWS or GitHub sign-in. In terminal mode,
+When started from a desktop terminal, the wizard first asks whether to stay
+in the terminal or launch the web interface. Press Enter or wait five seconds
+to stay in the terminal. Headless and SSH sessions go straight to the terminal
+wizard.
+
+After choosing an interface, enter the local vault passphrase. The wizard
+collects settings and displays them for review before AWS or GitHub sign-in.
+In terminal mode,
 use Tab and Enter to edit a field, or the numbered menu in a smaller terminal.
 Ctrl+Q exits a prompt or review. At a text prompt with a default, typing stops
 the five-second countdown and Enter submits the current answer.
@@ -60,7 +66,10 @@ and the [test client instructions](test-host.md#run-an-email-verification).
 # deploy.bat --server
 ```
 
-The launcher starts a local website. The page lets you choose an action,
+Use `--server` to open the browser directly or `--terminal` to go straight
+to the terminal wizard. The same flags work on both launchers.
+
+The browser opens a local website. The page lets you choose an action,
 review or edit settings, follow sign-in instructions, and see the Pulumi plan
 and deployment progress. Preview is preselected when you start without
 `--action`. Applying the saved plan requires an explicit click. Add
