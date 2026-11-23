@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/ef61f6d5fe8c9667a3d095eab40eaef5e451732e/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/93c566061116ffa707b4ce44c5b76705527720ff/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. No admin/index component or public API is involved.
 
@@ -28,8 +28,9 @@ use Tab and Enter to edit a field, or the numbered menu in a smaller terminal.
 Ctrl+Q exits a prompt or review. At a text prompt with a default, typing stops
 the five-second countdown and Enter submits the current answer.
 
-Project and environment select the saved deployment scope. Use dev, qa, or a
-custom test environment. The Pulumi project is `email-verification-testhost`,
+Project and environment select the saved deployment scope. The wizard suggests
+`test-host` for a new setup and reuses the saved project name on later runs.
+Use dev, qa, or a custom test environment. The Pulumi project is `email-verification-testhost`,
 with stacks named `test-<environment>`. For first setup, enter an S3 state URL
 or select `new` to create an encrypted, versioned bucket. Existing targets
 are checked against the signed-in account and verified S3 state.
