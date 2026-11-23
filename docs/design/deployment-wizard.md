@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/75fae6a2d1647c6914b885fc025f5fc2e38fea6d/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/ef61f6d5fe8c9667a3d095eab40eaef5e451732e/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. No admin/index component or public API is involved.
 
@@ -79,6 +79,11 @@ form. Continue validates the form and saves the accepted project inputs as
 defaults for that environment. The wizard then displays sign-in instructions
 and deployment progress. Applying a saved Pulumi plan requires an explicit
 click. Add `--no-open` to print the URL without opening the browser.
+
+Choose **Add AWS SSO profile** in the settings form to start AWS CLI setup in
+the launching terminal. The wizard reloads the list and keeps your form edits
+when you finish. Without an attached terminal, run `aws configure sso`
+separately and choose **Refresh AWS profiles**.
 
 Use **Stop wizard** to cancel the run and **Close wizard** to end the local
 session after reviewing the result. Terminal and noninteractive runs remain

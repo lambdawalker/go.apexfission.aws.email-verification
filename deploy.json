@@ -13,10 +13,10 @@
   "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired"],
   "InputsFile": "testhost.json",
   "Inputs": [
-    {"Name": "Sender", "Label": "SES From address (full email you can verify)", "Kind": "email", "GitHubVariable": "BENCH_SENDER"},
-    {"Name": "Recipient", "Label": "Test recipient (full email, verified in SES sandbox)", "Kind": "email", "GitHubVariable": "BENCH_RECIPIENT"},
-    {"Name": "Domain", "Label": "Ownership domain (resource tags only)", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
-    {"Name": "DNSProvider", "Label": "Who hosts public DNS for the SES sender domain?", "Kind": "dnsProvider", "GitHubVariable": "BENCH_DNS_PROVIDER"}
+    {"Name": "Sender", "Label": "SES From address", "Help": "Enter a full email address whose inbox you can access for SES verification.", "Kind": "email", "GitHubVariable": "BENCH_SENDER"},
+    {"Name": "Recipient", "Label": "Test recipient", "Help": "Enter the full address that receives the code. In the SES sandbox, verify this address in the deployment region.", "Kind": "email", "GitHubVariable": "BENCH_RECIPIENT"},
+    {"Name": "Domain", "Label": "Ownership domain", "Help": "Used for AWS resource tags and reports.", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
+    {"Name": "DNSProvider", "Label": "Sender DNS provider", "Help": "Choose the provider serving public DNS for the domain in the From address.", "Kind": "dnsProvider", "GitHubVariable": "BENCH_DNS_PROVIDER"}
   ],
   "ConfigDefaults": {"policyJSON": "{}"},
   "GitHub": {"Workflow": "testhost-deploy.yml", "EnvironmentPrefix": "testhost-"}
