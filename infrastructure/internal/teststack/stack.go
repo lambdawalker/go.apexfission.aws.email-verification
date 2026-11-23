@@ -30,6 +30,7 @@ const kind = "apexfission:email-verification:TestHost"
 type Settings struct {
 	Domain, Sender, Recipient, Archive string
 	Policy                             config.Config
+	Mobile                             MobileSettings
 }
 
 func (s Settings) Validate() error {
@@ -67,6 +68,14 @@ func Deploy(ctx *pulumi.Context, s Settings) error {
 	if err := s.Validate(); err != nil {
 		return err
 	}
+	var mobileHost string
+	if s.Mobile.BaseDomain != "" {
+		var err error
+		mobileHost, err = s.Mobile.hostname(ctx.Stack())
+		if err != nil {
+			return err
+		}
+	}
 	// Exact scope is explicit in the program configuration; this is never the
 	// parent application's default stack entry point.
 	vf, e := feature.Declare("verification", s.Policy)
@@ -89,10 +98,10 @@ func Deploy(ctx *pulumi.Context, s Settings) error {
 	if _, e = feature.Configuration(ctx.Stack(), "testhost", "testhost-role", "deployment-role", s.Policy); e != nil {
 		return e
 	}
-	_, e = infra.Deploy(ctx, plan, ownership.Metadata{Application: ctx.Project(), Environment: ctx.Stack(), Domain: s.Domain, Feature: "verification", Deployment: ctx.Project() + "-" + ctx.Stack(), Owner: "email-verification-testhost"}, adapter.Registry{kind: factory(s)})
+	_, e = infra.Deploy(ctx, plan, ownership.Metadata{Application: ctx.Project(), Environment: ctx.Stack(), Domain: s.Domain, Feature: "verification", Deployment: ctx.Project() + "-" + ctx.Stack(), Owner: "email-verification-testhost"}, adapter.Registry{kind: factory(s, mobileHost)})
 	return e
 }
-func factory(s Settings) adapter.Factory {
+func factory(s Settings, mobileHost string) adapter.Factory {
 	return func(ctx *pulumi.Context, name string, in pulumi.Map, opts ...pulumi.ResourceOption) (adapter.Registered, error) {
 		ctx, e := awslabels.ForFeature(ctx, "testhost")
 		if e != nil {
@@ -176,6 +185,11 @@ func factory(s Settings) adapter.Factory {
 		_, e = cloudwatch.NewEventTarget(ctx, name+"-worker-target", &cloudwatch.EventTargetArgs{Rule: schedule.Name, Arn: function.Arn, Input: pulumi.String(`{"action":"tick"}`), RetryPolicy: &cloudwatch.EventTargetRetryPolicyArgs{MaximumRetryAttempts: pulumi.Int(2), MaximumEventAgeInSeconds: pulumi.Int(120)}}, append(child, pulumi.DependsOn([]pulumi.Resource{invoke}))...)
 		if e != nil {
 			return adapter.Registered{}, e
+		}
+		if mobileHost != "" {
+			if err := deployMobile(ctx, name, s.Mobile, mobileHost, function, child); err != nil {
+				return adapter.Registered{}, err
+			}
 		}
 		ctx.Export("testHostFunction", function.Name)
 		ctx.Export("testHostFunctionArn", function.Arn)

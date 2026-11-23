@@ -1,4 +1,4 @@
-// Package testhost is an IAM-invoked test application, not a public API.
+// Package testhost contains the isolated email verification demo application.
 package testhost
 
 import (
@@ -69,7 +69,7 @@ func errorCode(e error) string {
 	}
 }
 
-// Handle is reachable only by AWS Lambda InvokeFunction authorization. It never
+// Handle processes an operator request or a request from the authenticated mobile adapter. It never
 // returns transaction internals, email proofs, assertions, or provider errors.
 func (a *App) Handle(ctx context.Context, in Input) (Output, error) {
 	if in.Action == "tick" {

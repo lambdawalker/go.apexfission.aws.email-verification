@@ -1,11 +1,12 @@
 package main
 
 import (
+	"strings"
+
 	"github.com/lambdawalker/go.apexfission.aws.email-verification/config"
 	"github.com/lambdawalker/go.apexfission.aws.email-verification/infrastructure/internal/teststack"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 	pc "github.com/pulumi/pulumi/sdk/v3/go/pulumi/config"
-	"strings"
 )
 
 func main() {
@@ -15,6 +16,13 @@ func main() {
 		if e != nil {
 			return e
 		}
-		return teststack.Deploy(ctx, teststack.Settings{Domain: c.Require("domain"), Sender: c.Require("sender"), Recipient: c.Require("recipient"), Archive: c.Require("archive"), Policy: policy})
+		return teststack.Deploy(ctx, teststack.Settings{
+			Domain: c.Require("domain"), Sender: c.Require("sender"), Recipient: c.Require("recipient"),
+			Archive: c.Require("archive"), Policy: policy,
+			Mobile: teststack.MobileSettings{
+				BaseDomain: c.Get("mobileBaseDomain"), DNSProvider: c.Get("mobileDNSProvider"),
+				DNSZone: c.Get("mobileDNSZone"), DNSZoneID: c.Get("mobileDNSZoneID"),
+			},
+		})
 	})
 }

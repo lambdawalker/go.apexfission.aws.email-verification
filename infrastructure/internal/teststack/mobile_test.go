@@ -1,0 +1,76 @@
+package teststack
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/lambdawalker/go.apexfission.aws.email-verification/config"
+	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+)
+
+func TestMobileDemoDomainAndAuthorization(t *testing.T) {
+	for _, provider := range []string{"route53", "cloudflare"} {
+		t.Run(provider, func(t *testing.T) {
+			m := &mocks{}
+			dns := MobileSettings{BaseDomain: "components.email-verification.apexfission.com",
+				DNSZone: "apexfission.com", DNSProvider: provider, DNSZoneID: strings.Repeat("a", 32)}
+			s := Settings{Domain: "tags.example.test", Sender: "sender@example.test", Recipient: "tester@example.test",
+				Archive: archive(t), Policy: config.Defaults(), Mobile: dns}
+			err := pulumi.RunErr(func(ctx *pulumi.Context) error { return Deploy(ctx, s) }, pulumi.WithMocks("email-verification-testhost", "test-qa", m))
+			if err != nil {
+				t.Fatal(err)
+			}
+			host := "qa.components.email-verification.apexfission.com"
+			routes, records, mappings, authorizers := 0, 0, 0, 0
+			for _, r := range m.rows {
+				switch r.TypeToken {
+				case "aws:apigatewayv2/api:Api":
+					if !r.Inputs["disableExecuteApiEndpoint"].BoolValue() {
+						t.Fatal("default API hostname was left enabled")
+					}
+				case "aws:apigatewayv2/authorizer:Authorizer":
+					authorizers++
+					if r.Inputs["authorizerType"].StringValue() != "JWT" {
+						t.Fatal("not a JWT authorizer")
+					}
+				case "aws:apigatewayv2/route:Route":
+					routes++
+					if r.Inputs["authorizationType"].StringValue() != "JWT" || !strings.HasPrefix(r.Inputs["routeKey"].StringValue(), "POST /v1/verification/") {
+						t.Fatal("unexpected or unprotected route")
+					}
+				case "aws:apigatewayv2/apiMapping:ApiMapping":
+					mappings++
+				case "aws:apigatewayv2/domainName:DomainName":
+					if r.Inputs["domainName"].StringValue() != host {
+						t.Fatal("hostname did not use the environment")
+					}
+				case "aws:route53/record:Record", "cloudflare:index/dnsRecord:DnsRecord":
+					if r.Inputs["type"].StringValue() != "CNAME" {
+						t.Fatal("unexpected record type")
+					}
+					name := r.Inputs["name"].StringValue()
+					if name != host && name != "_proof."+host {
+						t.Fatalf("record outside the demo hostname: %s", name)
+					}
+					records++
+				}
+			}
+			if routes != 3 || records != 2 || mappings != 1 || authorizers != 1 {
+				t.Fatalf("got %d routes, %d records, %d mappings, %d authorizers", routes, records, mappings, authorizers)
+			}
+		})
+	}
+}
+
+func TestMobileHostnameRejectsUnrelatedZonesAndProduction(t *testing.T) {
+	s := MobileSettings{BaseDomain: "components.email-verification.apexfission.com", DNSZone: "apexfission.com", DNSProvider: "route53"}
+	for _, stack := range []string{"qa", "test-prod", "test-production", "test-qa-"} {
+		if _, err := s.hostname(stack); err == nil {
+			t.Fatalf("accepted %q", stack)
+		}
+	}
+	s.DNSZone = "other.example"
+	if _, err := s.hostname("test-qa"); err == nil {
+		t.Fatal("accepted an unrelated DNS zone")
+	}
+}
