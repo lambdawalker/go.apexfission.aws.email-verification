@@ -4,6 +4,7 @@
   "Description": "Isolated email verification test host",
   "Repository": "lambdawalker/go.apexfission.aws.email-verification",
   "Feature": "email-verification",
+  "DefaultProject": "test-host",
   "PulumiProject": "email-verification-testhost",
   "PulumiDir": "infrastructure/cmd/testhost",
   "StackPrefix": "test-",
