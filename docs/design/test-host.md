@@ -110,11 +110,16 @@ Preview and Deploy include the endpoint resources. The default DNS zone is
 the public Route 53 zone for the ownership domain. Existing Pulumi values for
 `mobileBaseDomain` and `mobileDNSZone` take precedence. In the test host
 Pulumi directory, use `pulumi config set` to select a different base domain
-or delegated zone. When using Cloudflare, set `mobileDNSProvider` to
-`cloudflare`, set `mobileDNSZoneID`, and provide `CLOUDFLARE_API_TOKEN`
-with DNS write access to that zone. For GitHub deployment, supply it as a
-protected environment secret. The SES sender and ownership metadata remain
-separate settings.
+or delegated zone. If no Route 53 zone ID is configured, the program looks
+up the public zone before registering test-host resources. The selected AWS
+role must be able to find it. Set `mobileDNSZoneID` to select the authoritative
+public zone explicitly if the name lookup cannot pick it.
+
+When using Cloudflare, set `mobileDNSProvider` to `cloudflare`, set
+`mobileDNSZoneID`, and provide `CLOUDFLARE_API_TOKEN` with DNS write access to
+that zone. For GitHub deployment, supply it as a protected environment secret.
+The wizard's **Sender DNS provider** field applies to the SES sender. The
+mobile endpoint reads its DNS settings from Pulumi stack configuration.
 
 The deployment role needs access to manage the demo's API Gateway, certificate,
 Cognito resources, and selected Route 53 zone if applicable. Inviting users to
