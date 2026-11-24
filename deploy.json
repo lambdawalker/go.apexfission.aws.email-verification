@@ -15,13 +15,13 @@
   "InputsFile": "testhost.json",
   "Functions": {
     "defaultSenderAddress": {
-      "Parameters": {"Address": "text", "Domain": "domain"},
+      "Parameters": {"Address": "text", "Environment": "domain", "Domain": "domain"},
       "Result": "email",
-      "Template": "{{if contains .Address \"@\"}}{{.Address}}{{else}}{{.Address}}@{{.Domain}}{{end}}"
+      "Template": "{{if contains .Address \"@\"}}{{.Address}}{{else}}{{.Address}}@{{.Environment}}.components.email-verification.{{lower .Domain}}{{end}}"
     }
   },
   "Inputs": [
-    {"Name": "Domain", "Label": "Ownership domain", "Help": "Used for AWS resource tags, reports, and the suggested SES From address.", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
+    {"Name": "Domain", "Label": "Ownership domain", "Help": "Enter the base domain, such as apexfission.com. The wizard adds the environment and service labels.", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
     {
       "Name": "Sender",
       "Label": "SES From address",
@@ -34,6 +34,7 @@
         "UseLegacyValueAsInput": true,
         "Parameters": {
           "Address": {"Source": "userInput"},
+          "Environment": {"Source": "environment"},
           "Domain": {"Source": "field", "Name": "Domain"}
         }
       }
@@ -43,9 +44,7 @@
   ],
   "ConfigDefaults": {
     "policyJSON": "{}",
-    "mobileBaseDomain": "components.email-verification.apexfission.com",
-    "mobileDNSProvider": "route53",
-    "mobileDNSZone": "apexfission.com"
+    "mobileDNSProvider": "route53"
   },
   "GitHub": {"Workflow": "testhost-deploy.yml", "EnvironmentPrefix": "testhost-"}
 }

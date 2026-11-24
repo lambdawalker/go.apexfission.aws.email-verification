@@ -97,19 +97,20 @@ AWS credentials and region come from the normal AWS CLI profile/environment.
 
 ## Connect an Android demo
 
-The wizard seeds `mobileBaseDomain` as `components.email-verification.apexfission.com`.
-The test stack name supplies the leading environment label.
+The wizard enables mobile DNS. The stack defaults the mobile base domain to
+`components.email-verification.<ownership-domain>`. The stack name supplies
+the leading environment label. With `apexfission.com` as the ownership domain:
 
 | Stack | Android API base URL |
 | --- | --- |
 | `test-dev` | `https://dev.components.email-verification.apexfission.com` |
 | `test-qa` | `https://qa.components.email-verification.apexfission.com` |
 
-Setup saves the stack defaults. Preview and Deploy include the endpoint resources.
-The default DNS zone is the public Route 53 zone for `apexfission.com`. In the
-test host Pulumi directory, use `pulumi config set` to override
-`mobileBaseDomain`, `mobileDNSZone`, or `mobileDNSZoneID` for a different
-domain or delegated zone. When using Cloudflare, set `mobileDNSProvider` to
+Preview and Deploy include the endpoint resources. The default DNS zone is
+the public Route 53 zone for the ownership domain. Existing Pulumi values for
+`mobileBaseDomain` and `mobileDNSZone` take precedence. In the test host
+Pulumi directory, use `pulumi config set` to select a different base domain
+or delegated zone. When using Cloudflare, set `mobileDNSProvider` to
 `cloudflare`, set `mobileDNSZoneID`, and provide `CLOUDFLARE_API_TOKEN`
 with DNS write access to that zone. For GitHub deployment, supply it as a
 protected environment secret. The SES sender and ownership metadata remain
@@ -119,9 +120,10 @@ The deployment role needs access to manage the demo's API Gateway, certificate,
 Cognito resources, and selected Route 53 zone if applicable. Inviting users to
 the demo pool is a separate operator action.
 
-After apply, use the Pulumi outputs `testHostMobileURL`,
-`testHostMobileUserPoolID`, `testHostMobileClientID`, and `testHostMobileIssuer`
-for the matching Android demo flavor. Invite demo users in that environment’s
+The test host exports per-environment connection details through Pulumi.
+It has no shared environment discovery index. After apply, use
+`testHostMobileURL`, `testHostMobileUserPoolID`, `testHostMobileClientID`, and
+`testHostMobileIssuer` to configure the Android demo for the chosen environment. Invite demo users in that environment’s
 Cognito pool. The Android client signs in via SRP and uses the **access token**
 in the authorization header. An invitation and the existing SES sender and
 test-recipient verification are required for an end-to-end email demo.

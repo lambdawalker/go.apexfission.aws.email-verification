@@ -74,3 +74,26 @@ func TestMobileHostnameRejectsUnrelatedZonesAndProduction(t *testing.T) {
 		t.Fatal("accepted an unrelated DNS zone")
 	}
 }
+
+func TestMobileDefaultsUseDeploymentDomain(t *testing.T) {
+	for _, test := range []struct {
+		baseDomain, stack, host string
+	}{
+		{"apexfission.com", "test-dev", "dev.components.email-verification.apexfission.com"},
+		{"Example.test", "test-qa", "qa.components.email-verification.example.test"},
+	} {
+		s := (MobileSettings{DNSProvider: "route53"}).withOwnershipDefaults(test.baseDomain)
+		got, err := s.hostname(test.stack)
+		if err != nil || got != test.host {
+			t.Fatalf("default hostname = %q, %v; want %q", got, err, test.host)
+		}
+	}
+
+	override := MobileSettings{BaseDomain: "mobile.other.test", DNSProvider: "route53", DNSZone: "other.test"}
+	if got := override.withOwnershipDefaults("example.test"); got != override {
+		t.Fatalf("explicit mobile settings changed: %+v", got)
+	}
+	if got := (MobileSettings{}).withOwnershipDefaults("apexfission.com"); got.BaseDomain != "" {
+		t.Fatalf("enabled mobile DNS without a provider: %+v", got)
+	}
+}

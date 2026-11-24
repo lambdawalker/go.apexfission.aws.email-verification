@@ -68,6 +68,7 @@ func Deploy(ctx *pulumi.Context, s Settings) error {
 	if err := s.Validate(); err != nil {
 		return err
 	}
+	s.Mobile = s.Mobile.withOwnershipDefaults(s.Domain)
 	var mobileHost string
 	if s.Mobile.BaseDomain != "" {
 		var err error

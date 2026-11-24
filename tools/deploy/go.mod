@@ -7,7 +7,7 @@ tool github.com/lambdawalker/go.infra.composer/deploycli/cmd/infra-deploy
 require (
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/lambdawalker/go.infra.composer v0.0.0-20261103235125-ad4cfd268616 // indirect
-	github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261124002047-630cc0cbffca // indirect
+	github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261124003808-50c41c1f2422 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -15,6 +15,18 @@ type MobileSettings struct {
 	BaseDomain, DNSProvider, DNSZone, DNSZoneID string
 }
 
+// withOwnershipDefaults fills the hostname and zone for a mobile-enabled stack.
+// Explicit Pulumi hostname and zone settings retain precedence.
+func (s MobileSettings) withOwnershipDefaults(domain string) MobileSettings {
+	if s.DNSProvider != "" && s.BaseDomain == "" {
+		s.BaseDomain = "components.email-verification." + strings.ToLower(domain)
+	}
+	if s.BaseDomain != "" && s.DNSZone == "" {
+		s.DNSZone = strings.ToLower(domain)
+	}
+	return s
+}
+
 var dnsLabel = regexp.MustCompile(`^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$`)
 var demoEnvironment = regexp.MustCompile(`^[a-z](?:[a-z0-9-]{0,29}[a-z0-9])?$`)
 
