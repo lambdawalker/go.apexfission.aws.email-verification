@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/93c566061116ffa707b4ce44c5b76705527720ff/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/c6a586d0dd860da1087cf0cd7f6f6b64922d36fa/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -70,9 +70,12 @@ and the [test client instructions](test-host.md#run-an-email-verification).
 Use `--server` to open the browser directly or `--terminal` to go straight
 to the terminal wizard. The same flags work on both launchers.
 
-The browser opens a local website. When you start without `--action`, each
-available action has a card that explains what it does. Preview is selected
-by default.
+The browser opens a local website. Use **Theme** in the header to choose
+**System**, **Light**, or **Dark**. New wizard sessions follow your system
+appearance. Your selection survives reloads in the current browser tab.
+
+When you start without `--action`, each available action has a card that
+explains what it does. Preview is selected by default.
 
 After choosing the deployment scope, enter or review the SES From address,
 test recipient, ownership domain, DNS provider, and AWS settings in a single
