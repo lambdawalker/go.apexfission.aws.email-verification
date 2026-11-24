@@ -32,3 +32,4 @@ jobs:
         working-directory: infrastructure
       - run: go test -race ./...
         working-directory: infrastructure
+      - run: bash scripts/build-discovery.sh
