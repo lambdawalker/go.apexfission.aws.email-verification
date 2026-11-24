@@ -13,6 +13,11 @@
   "BuildDir": "dist/testhost",
   "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired", "testHostMobileURL", "testHostMobileUserPoolID", "testHostMobileClientID", "testHostMobileIssuer"],
   "InputsFile": "testhost.json",
+  "DiscoveryStack": {
+    "PulumiDir": "infrastructure/cmd/discovery",
+    "PulumiProject": "email-verification-discovery",
+    "Stack": "shared"
+  },
   "Functions": {
     "defaultSenderAddress": {
       "Parameters": {"Address": "text", "Environment": "domain", "Domain": "domain"},

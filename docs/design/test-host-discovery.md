@@ -63,6 +63,17 @@ untouched. If publication fails after a successful apply, fix the reported
 issue and rerun deploy. The last published entry stays available until a
 successful replacement or a confirmed retirement.
 
+The deploy wizard offers **Remove an environment** to retire one entry and
+destroy its stack. **Remove all environments and index** first verifies the
+existing shared S3 backend and `shared` discovery stack. Enter that index
+backend URL and its Pulumi passphrase. The wizard requests confirmation for
+each saved environment, retires its entry, and destroys its stack. After all
+environment stacks are gone, it destroys the shared discovery index stack.
+If a stack cannot be removed, the wizard stops before removing the index so
+the remaining environments can be recovered and retried. GitHub deployment
+settings can be removed per selected environment using the separate
+**Remove GitHub configuration** card.
+
 ## Connect the Android demo
 
 Open the live connection form and choose a published environment. The demo
