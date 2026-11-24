@@ -118,7 +118,7 @@ func deployMobile(ctx *pulumi.Context, name string, s MobileSettings, host strin
 		if err != nil {
 			return err
 		}
-		_, err = lambda.NewPermission(ctx, name+"-demo-permission-"+action, &lambda.PermissionArgs{
+		_, err = newLambdaPermission(ctx, name+"-demo-permission-"+action, &lambda.PermissionArgs{
 			Action: pulumi.String("lambda:InvokeFunction"), Function: function.Name,
 			Principal: pulumi.String("apigateway.amazonaws.com"),
 			SourceArn: pulumi.Sprintf("%s/$default/POST%s", api.ExecutionArn, route),

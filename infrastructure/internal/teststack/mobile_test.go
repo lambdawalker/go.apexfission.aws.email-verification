@@ -22,6 +22,11 @@ func TestMobileDemoDomainAndAuthorization(t *testing.T) {
 			}
 			host := "qa.components.email-verification.apexfission.com"
 			routes, records, mappings, authorizers := 0, 0, 0, 0
+			permissions := map[string]string{
+				"testhost-app-demo-permission-start":   "start",
+				"testhost-app-demo-permission-confirm": "confirm",
+				"testhost-app-demo-permission-status":  "status",
+			}
 			for _, r := range m.rows {
 				switch r.TypeToken {
 				case "aws:apigatewayv2/api:Api":
@@ -38,6 +43,16 @@ func TestMobileDemoDomainAndAuthorization(t *testing.T) {
 					if r.Inputs["authorizationType"].StringValue() != "JWT" || !strings.HasPrefix(r.Inputs["routeKey"].StringValue(), "POST /v1/verification/") {
 						t.Fatal("unexpected or unprotected route")
 					}
+				case "aws:lambda/permission:Permission":
+					if r.Inputs["principal"].StringValue() != "apigateway.amazonaws.com" {
+						continue
+					}
+					action, ok := permissions[r.Name]
+					if !ok {
+						t.Fatalf("unexpected API Gateway Lambda permission %q", r.Name)
+					}
+					assertLambdaPermission(t, r, r.Name, "apigateway.amazonaws.com", "arn:aws:execute-api:us-east-2:123456789012:demo/$default/POST/v1/verification/"+action)
+					delete(permissions, r.Name)
 				case "aws:apigatewayv2/apiMapping:ApiMapping":
 					mappings++
 				case "aws:apigatewayv2/domainName:DomainName":
@@ -54,6 +69,9 @@ func TestMobileDemoDomainAndAuthorization(t *testing.T) {
 					}
 					records++
 				}
+			}
+			if len(permissions) != 0 {
+				t.Fatalf("missing API Gateway Lambda permissions: %v", permissions)
 			}
 			if routes != 3 || records != 2 || mappings != 1 || authorizers != 1 {
 				t.Fatalf("got %d routes, %d records, %d mappings, %d authorizers", routes, records, mappings, authorizers)

@@ -75,7 +75,7 @@ func TestIsolatedStackWiring(t *testing.T) {
 	if e != nil {
 		t.Fatal(e)
 	}
-	tables, functions, schedules, signers, secrets, identities := 0, 0, 0, 0, 0, 0
+	tables, functions, schedules, signers, secrets, identities, permissions := 0, 0, 0, 0, 0, 0, 0
 	for _, r := range m.rows {
 		switch r.TypeToken {
 		case "aws:dynamodb/table:Table":
@@ -121,6 +121,9 @@ func TestIsolatedStackWiring(t *testing.T) {
 					t.Fatal("raw secret in environment")
 				}
 			}
+		case "aws:lambda/permission:Permission":
+			permissions++
+			assertLambdaPermission(t, r, "testhost-app-worker-permission", "events.amazonaws.com", "arn:aws:mock::123:testhost.app-worker")
 		case "aws:cloudwatch/eventTarget:EventTarget":
 			schedules++
 			if r.Inputs["input"].StringValue() != `{"action":"tick"}` {
@@ -153,8 +156,8 @@ func TestIsolatedStackWiring(t *testing.T) {
 			t.Fatal("public test endpoint")
 		}
 	}
-	if tables != 2 || functions != 1 || schedules != 1 || signers != 1 || secrets != 1 || identities != 1 {
-		t.Fatalf("unexpected isolated resources: %d %d %d %d %d %d", tables, functions, schedules, signers, secrets, identities)
+	if tables != 2 || functions != 1 || schedules != 1 || signers != 1 || secrets != 1 || identities != 1 || permissions != 1 {
+		t.Fatalf("unexpected isolated resources: %d %d %d %d %d %d %d", tables, functions, schedules, signers, secrets, identities, permissions)
 	}
 }
 func TestUnsafePolicyCannotProvision(t *testing.T) {
@@ -172,4 +175,24 @@ func TestUnsafePolicyCannotProvision(t *testing.T) {
 			t.Fatal("resource registered before rejection")
 		}
 	}
+}
+
+func assertLambdaPermission(t *testing.T, r pulumi.MockResourceArgs, name, principal, sourceARN string) {
+	t.Helper()
+	if r.Name != name {
+		t.Fatalf("Lambda permission logical name = %q, want %q", r.Name, name)
+	}
+	if r.Inputs["action"].StringValue() != "lambda:InvokeFunction" ||
+		r.Inputs["function"].StringValue() != "testhost-app-lambda" ||
+		r.Inputs["principal"].StringValue() != principal ||
+		r.Inputs["sourceArn"].StringValue() != sourceARN {
+		t.Fatalf("incorrect invocation scope for %q", r.Name)
+	}
+	previousName := strings.Replace(name, "testhost-app-", "testhost.app-", 1)
+	for _, alias := range r.RegisterRPC.GetAliases() {
+		if alias.GetSpec().GetName() == previousName {
+			return
+		}
+	}
+	t.Fatalf("Lambda permission %q lacks alias %q", r.Name, previousName)
 }
