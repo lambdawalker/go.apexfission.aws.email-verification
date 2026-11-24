@@ -14,6 +14,7 @@ import (
 	composer "github.com/lambdawalker/go.infra.composer"
 	adapter "github.com/lambdawalker/go.infra.composer/adapters/pulumi"
 	"github.com/lambdawalker/go.infra.composer/adapters/pulumi/awslabels"
+	"github.com/lambdawalker/go.infra.composer/adapters/pulumi/awsnames"
 	"github.com/lambdawalker/go.infra.composer/ownership"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/cloudwatch"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/dynamodb"
@@ -104,6 +105,14 @@ func Deploy(ctx *pulumi.Context, s Settings) error {
 }
 func factory(s Settings, mobileHost string) adapter.Factory {
 	return func(ctx *pulumi.Context, name string, in pulumi.Map, opts ...pulumi.ResourceOption) (adapter.Registered, error) {
+		// Pulumi uses the logical name as the base of the AWS function name.
+		// Lambda disallows the dot in Composer's qualified resource name.
+		previousName := name + "-lambda"
+		functionName := strings.ReplaceAll(previousName, ".", "-")
+		physicalName, e := awsnames.LambdaFunctionName(functionName, nil)
+		if e != nil {
+			return adapter.Registered{}, e
+		}
 		ctx, e := awslabels.ForFeature(ctx, "testhost")
 		if e != nil {
 			return adapter.Registered{}, e
@@ -171,11 +180,8 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		}
 		// Only ARNs/configuration go into the environment; secret bytes stay in SM.
 		variables := pulumi.StringMap{"HOST_TABLE": table.Name, "VERIFIER_TABLE": in["table_name"].(pulumi.StringOutput), "KEY_ARN": in["key_arn"].(pulumi.StringOutput), "KEY_ID": in["key_id"].(pulumi.StringOutput), "EMAIL_VERIFICATION_POLICY": in["policy_json"].(pulumi.StringOutput), "SECRET_ARN": secret.Arn, "SENDER": pulumi.String(s.Sender), "RECIPIENT": pulumi.String(s.Recipient), "HOST_ID": pulumi.String(ctx.Project() + "-" + ctx.Stack())}
-		// Pulumi uses the logical name as the base of the AWS function name.
-		// Lambda disallows the dot in Composer's qualified resource name.
-		previousName := name + "-lambda"
-		functionName := strings.ReplaceAll(previousName, ".", "-")
 		function, e := lambda.NewFunction(ctx, functionName, &lambda.FunctionArgs{
+			Name:          physicalName,
 			Role:          role.Arn,
 			Runtime:       pulumi.String("provided.al2023"),
 			Handler:       pulumi.String("bootstrap"),
