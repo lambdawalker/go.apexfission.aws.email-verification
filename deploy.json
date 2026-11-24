@@ -46,5 +46,14 @@
     "policyJSON": "{}",
     "mobileDNSProvider": "route53"
   },
+  "Discovery": {
+    "APIURL": "testHostMobileURL",
+    "CognitoIssuer": "testHostMobileIssuer",
+    "CognitoUserPoolID": "testHostMobileUserPoolID",
+    "CognitoClientID": "testHostMobileClientID",
+    "ProbeMethod": "POST",
+    "ProbePath": "/v1/verification/status",
+    "ProbeStatus": 401
+  },
   "GitHub": {"Workflow": "testhost-deploy.yml", "EnvironmentPrefix": "testhost-"}
 }

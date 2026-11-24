@@ -120,13 +120,16 @@ The deployment role needs access to manage the demo's API Gateway, certificate,
 Cognito resources, and selected Route 53 zone if applicable. Inviting users to
 the demo pool is a separate operator action.
 
-The test host exports per-environment connection details through Pulumi.
-It has no shared environment discovery index. After apply, use
-`testHostMobileURL`, `testHostMobileUserPoolID`, `testHostMobileClientID`, and
-`testHostMobileIssuer` to configure the Android demo for the chosen environment. Invite demo users in that environment’s
-Cognito pool. The Android client signs in via SRP and uses the **access token**
-in the authorization header. An invitation and the existing SES sender and
-test-recipient verification are required for an end-to-end email demo.
+The test host exports per-environment connection details through Pulumi. To
+configure the demo manually, use `testHostMobileURL` and the Cognito outputs
+`testHostMobileUserPoolID`, `testHostMobileClientID`, and `testHostMobileIssuer`.
+Invite testers in the selected environment's Cognito pool. The demo uses a
+Cognito **access token** in the authorization header. An invitation and SES
+sender and test-recipient verification are required for an end-to-end email demo.
+
+For environment selection in the demo, deploy the
+[shared discovery directory](test-host-discovery.md). Manual configuration
+continues to use the same Pulumi outputs.
 
 Send JSON with `Content-Type: application/json` and
 `Authorization: Bearer <access_token>`.
