@@ -19,16 +19,38 @@ type mocks struct {
 	mu            sync.Mutex
 	rows          []pulumi.MockResourceArgs
 	zoneLookupErr error
+	cloudflareIDs []string
+	invocations   []pulumi.MockCallArgs
 }
 
 func (m *mocks) Call(a pulumi.MockCallArgs) (resource.PropertyMap, error) {
-	if a.Token == "aws:route53/getZone:getZone" {
+	m.mu.Lock()
+	m.invocations = append(m.invocations, a)
+	m.mu.Unlock()
+	switch a.Token {
+	case "aws:route53/getZone:getZone":
 		if m.zoneLookupErr != nil {
 			return nil, m.zoneLookupErr
 		}
 		return resource.PropertyMap{"zoneId": resource.NewStringProperty("ZTESTHOST")}, nil
+	case "cloudflare:index/getZones:getZones":
+		if m.zoneLookupErr != nil {
+			return nil, m.zoneLookupErr
+		}
+		ids := m.cloudflareIDs
+		if ids == nil {
+			ids = []string{strings.Repeat("a", 32)}
+		}
+		var matches []resource.PropertyValue
+		for _, id := range ids {
+			matches = append(matches, resource.NewObjectProperty(resource.PropertyMap{
+				"id": resource.NewStringProperty(id), "name": a.Args["name"], "status": resource.NewStringProperty("active"),
+			}))
+		}
+		return resource.PropertyMap{"results": resource.NewArrayProperty(matches)}, nil
+	default:
+		return a.Args, nil
 	}
-	return a.Args, nil
 }
 func (m *mocks) NewResource(a pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
 	m.mu.Lock()

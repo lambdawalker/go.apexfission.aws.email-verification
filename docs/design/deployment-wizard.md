@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/c1fc483b04b7bf8f39b29c809840b5070ad24271/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/acaf86679af45afeba95d9290ef6a1c801950221/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -49,7 +49,7 @@ The wizard remembers these project inputs per environment.
 | SES From address (`--sender`) | `verify` or `verify-demo@example.com` | A local part uses `<environment>.components.email-verification.<base-domain>`. The interactive default is `verify`. An explicit full address can use a different domain. Use an inbox you can access to confirm the SES email identity. |
 | Test recipient (`--recipient`) | `tester@example.com` | Use the full address that will receive the code. In the SES sandbox, verify it in the deployment's AWS region before testing. |
 | Ownership domain (`--domain`) | `apexfission.com` | Enter the base domain. It also supplies tags, reports, and the default Android API hostname. |
-| Sender domain's public DNS provider (`--dnsprovider`) | `route53` or `cloudflare` | Pick the provider that serves the public DNS for the domain in the From address. The registrar may be different. |
+| Public DNS provider (`--dnsprovider`) | `route53` or `cloudflare` | Select the provider serving the sender domain. The mobile API uses it by default. |
 
 The test stack creates an SES email-address identity. The chosen address must
 be able to receive the SES verification email. Provision a mailbox or forwarding
@@ -91,6 +91,12 @@ The wizard saves the project defaults after you confirm the verified account.
 It displays sign-in instructions when needed and then shows deployment
 progress. Applying a saved Pulumi plan requires an explicit click. Add
 `--no-open` to print the URL without opening the browser.
+
+Use **Credentials** to enter the Cloudflare API token or GitHub token when
+needed. The wizard encrypts entered tokens with the local vault passphrase
+after AWS account confirmation. A later run shows `*****` for a configured
+token. Leave its field blank to keep it. The GitHub token is used by the
+local GitHub CLI during setup.
 
 Choose **Add AWS SSO profile** in the settings form to start AWS CLI setup in
 the launching terminal. The wizard reloads the list and keeps your form edits

@@ -29,6 +29,8 @@ func (s MobileSettings) withOwnershipDefaults(domain string) MobileSettings {
 	return s
 }
 
+var cloudflareZoneID = regexp.MustCompile(`^[a-f0-9]{32}$`)
+
 var demoEnvironment = regexp.MustCompile(`^[a-z](?:[a-z0-9-]{0,29}[a-z0-9])?$`)
 
 func (s MobileSettings) hostname(stack string) (string, error) {
@@ -51,7 +53,7 @@ func (s MobileSettings) hostname(stack string) (string, error) {
 	switch s.DNSProvider {
 	case "route53":
 	case "cloudflare":
-		if !regexp.MustCompile(`^[a-f0-9]{32}$`).MatchString(s.DNSZoneID) {
+		if s.DNSZoneID != "" && !cloudflareZoneID.MatchString(s.DNSZoneID) {
 			return "", fmt.Errorf("mobileDNSZoneID must be the Cloudflare zone ID")
 		}
 	default:

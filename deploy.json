@@ -40,11 +40,10 @@
       }
     },
     {"Name": "Recipient", "Label": "Test recipient", "Help": "Enter the full address that receives the code. In the SES sandbox, verify this address in the deployment region.", "Kind": "email", "GitHubVariable": "BENCH_RECIPIENT"},
-    {"Name": "DNSProvider", "Label": "Sender DNS provider", "Help": "Choose the provider serving public DNS for the domain in the From address.", "Kind": "dnsProvider", "GitHubVariable": "BENCH_DNS_PROVIDER"}
+    {"Name": "DNSProvider", "Label": "Public DNS provider", "Help": "Choose the provider serving the sender domain. The mobile API uses this provider by default.", "Kind": "dnsProvider", "GitHubVariable": "BENCH_DNS_PROVIDER"}
   ],
   "ConfigDefaults": {
-    "policyJSON": "{}",
-    "mobileDNSProvider": "route53"
+    "policyJSON": "{}"
   },
   "Discovery": {
     "APIURL": "testHostMobileURL",
