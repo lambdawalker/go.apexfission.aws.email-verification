@@ -28,11 +28,11 @@ github.com/charmbracelet/x/term v0.2.1 h1:AQeHeLZ1OqSXhrAWpYUtZyX1T3zVxfpZuEQMIQ
 github.com/charmbracelet/x/term v0.2.1/go.mod h1:oQ4enTYFV7QN4m0i9mzHrViD7TQKvNEEkHUMCmsxdUg=
 github.com/lambdawalker/go.infra.composer v0.0.0-20261124050211-12f6df24c8b7 h1:zWZgUF5BAg5JS0/0+yyl6O3A/vtXCbPtQe3dWF9Zzcs=
 github.com/lambdawalker/go.infra.composer v0.0.0-20261124050211-12f6df24c8b7/go.mod h1:rUs6Et8eAaaUKYxSBJY6bahA7xlGZn2w5gymh6MBRZQ=
-github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261124170740-9034a0771741 h1:W4XhSTAU/dDxJTX0SJcShdefgbzNnjcAUelqaOxRTOE=
-github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261124170740-9034a0771741/go.mod h1:xTIe9DiiQ0Ycn23UWYERWjE5VHp62VR5hsH/A2hEgHM=
 golang.org/x/sys v0.36.0 h1:KVRy2GtZBrk1cBYA7MKu5bEZFxQk4NIDV6RLVcC8o0k=
 golang.org/x/sys v0.36.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261124220154-131991d9c921 h1:enB3ks+HLuL9vDpeyW0qRBy0npUfeNeGuhCz7kp1J58=
+github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261124220154-131991d9c921/go.mod h1:xTIe9DiiQ0Ycn23UWYERWjE5VHp62VR5hsH/A2hEgHM=
