@@ -113,7 +113,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		if e != nil {
 			return adapter.Registered{}, e
 		}
-		ctx, e := awslabels.ForFeature(ctx, "testhost")
+		ctx, e = awslabels.ForFeature(ctx, "testhost")
 		if e != nil {
 			return adapter.Registered{}, e
 		}
