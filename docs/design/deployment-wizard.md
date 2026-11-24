@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/20aeae68814a6af34dc097aa417ea829ffa41585/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/06f46171933a5bfb593d74d90ea679f66f5e1602/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -99,8 +99,10 @@ separately and choose **Refresh AWS profiles**.
 
 After an action completes, fails, or stops, choose **Back to main page** to
 open the action cards in the same tab. The wizard releases the action's local
-locks before showing its result. Unlock the vault for the next action to use
-the saved settings.
+locks before showing its result. Choose **Copy diagnostics** on a failed or
+stopped result to copy the action, stage, reported error, and recent failed
+command output. The wizard redacts known secrets and common credential
+formats. Unlock the vault for the next action to use the saved settings.
 
 ```mermaid
 flowchart TD
