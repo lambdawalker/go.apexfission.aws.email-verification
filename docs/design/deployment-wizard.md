@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/acaf86679af45afeba95d9290ef6a1c801950221/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/5c94269aebb7731a58d0f60857ef5c51897cb57b/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -17,7 +17,7 @@ from the repository:
 ```
 
 When started from a desktop terminal, the wizard first asks whether to stay
-in the terminal or launch the web interface. Press Enter or wait five seconds
+in the terminal or launch the web interface. Press Enter or wait 15 seconds
 to stay in the terminal. Headless and SSH sessions go straight to the terminal
 wizard.
 
@@ -26,7 +26,7 @@ collects settings and displays them for review before AWS or GitHub sign-in.
 In terminal mode,
 use Tab and Enter to edit a field, or the numbered menu in a smaller terminal.
 Ctrl+Q exits a prompt or review. At a text prompt with a default, typing stops
-the five-second countdown and Enter submits the current answer.
+the 15-second countdown and Enter submits the current answer.
 
 Project and environment select the saved deployment scope. The wizard suggests
 `test-host` for a new setup and reuses the saved project name on later runs.
@@ -91,6 +91,14 @@ The wizard saves the project defaults after you confirm the verified account.
 It displays sign-in instructions when needed and then shows deployment
 progress. Applying a saved Pulumi plan requires an explicit click. Add
 `--no-open` to print the URL without opening the browser.
+
+The bottom action bar stays visible as you scroll the form or Pulumi plan.
+The plan groups artifacts by service and shows a type, logical name, operation,
+and purpose where known. Expand a name to see the full Pulumi URN.
+
+Routine browser defaults have a 15-second countdown. A form with valid,
+resolved defaults has 30 seconds. Interacting with the page pauses the
+countdown, and applying the saved plan requires an explicit click.
 
 Use **Credentials** to enter the Cloudflare API token or GitHub token when
 needed. The wizard encrypts entered tokens with the local vault passphrase
@@ -159,7 +167,7 @@ include the certificate, DNS records, and authenticated API. See the [mobile dem
 ```
 
 A plain terminal invocation defaults to deploy: build, successful preview, then
-“Deploy the previewed changes? [Y/n]”. Enter/yes applies immediately; five seconds
+“Deploy the previewed changes? [Y/n]”. Enter/yes applies immediately; 15 seconds
 without input applies that saved plan. No/Escape/Ctrl+C/EOF cancels. Required text,
 secret entry and destructive confirmations never receive timeout approval.
 Deletion/replacement additionally requires typing the exact stack name. Explicit
