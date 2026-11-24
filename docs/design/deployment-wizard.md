@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/5b32b8809793a556a041c224b26a31ec2cf19f52/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/f6c457d525b0114ac464102b0651a155713e7e2a/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -97,8 +97,10 @@ the launching terminal. The wizard reloads the list and keeps your form edits
 when you finish. Without an attached terminal, run `aws configure sso`
 separately and choose **Refresh AWS profiles**.
 
-Use **Stop wizard** to cancel the run and **Close wizard** to end the local
-session after reviewing the result. Terminal and noninteractive runs remain
+After **Setup complete**, choose **Back to main page** to pick another action
+in the same browser tab. Unlock the vault when prompted to continue with the
+saved settings. Use **Stop wizard** to cancel the run or **Close wizard** to
+end the local session after reviewing the result. Terminal and noninteractive runs remain
 available through the same launcher.
 
 ## Android demo endpoint
