@@ -126,6 +126,10 @@ Cognito pool. The Android client signs in via SRP and uses the **access token**
 in the authorization header. An invitation and the existing SES sender and
 test-recipient verification are required for an end-to-end email demo.
 
+For environment selection in the demo, deploy the
+[shared discovery directory](test-host-discovery.md). Manual configuration
+continues to use the same Pulumi outputs.
+
 Send JSON with `Content-Type: application/json` and
 `Authorization: Bearer <access_token>`.
 

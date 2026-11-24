@@ -71,6 +71,8 @@ jobs:
       - name: Run shared deployment program
         shell: bash
         env:
+          INFRA_DISCOVERY_INDEX_URL: ${{ vars.BENCH_INDEX_URL }}
+          INFRA_DISCOVERY_INDEX_REGION: ${{ vars.BENCH_INDEX_REGION }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           approval=()
