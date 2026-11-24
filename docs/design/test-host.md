@@ -111,9 +111,10 @@ Preview and Deploy include the endpoint resources. The wizard's
 The program looks up the public Route 53 zone or the active Cloudflare zone
 for the ownership domain before registering test-host resources.
 
-For Cloudflare, set `CLOUDFLARE_API_TOKEN` before launching the wizard, or
-use the Pulumi provider's secret configuration. The token needs DNS write
-access and Zone Read for automatic zone lookup. Set `mobileDNSZoneID`
+For Cloudflare, enter the API token in the wizard's **Credentials** panel.
+The token needs DNS write access and Zone Read for automatic zone lookup.
+You can also provide `CLOUDFLARE_API_TOKEN` in the launcher's environment
+or use Pulumi's secret configuration for the provider. Set `mobileDNSZoneID`
 in Pulumi configuration to use a known zone ID and skip the lookup.
 For GitHub deployment, supply the token as a protected environment secret.
 
