@@ -12,16 +12,35 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-func deployMobileDomain(ctx *pulumi.Context, name string, s MobileSettings, host string, api *apigatewayv2.Api, stage *apigatewayv2.Stage, opts []pulumi.ResourceOption) error {
-	if s.DNSProvider == "route53" && s.DNSZoneID == "" {
-		zone, err := route53.LookupZone(ctx, &route53.LookupZoneArgs{
-			Name: pulumi.StringRef(s.DNSZone + "."), PrivateZone: pulumi.BoolRef(false),
-		})
-		if err != nil {
-			return fmt.Errorf("lookup public Route 53 zone %s: %w", s.DNSZone, err)
-		}
-		s.DNSZoneID = zone.ZoneId
+func (s MobileSettings) resolveDNSZone(ctx *pulumi.Context, host string) (MobileSettings, error) {
+	if s.DNSProvider != "route53" || s.DNSZoneID != "" {
+		return s, nil
 	}
+	zone, err := route53.LookupZone(ctx, &route53.LookupZoneArgs{
+		Name: pulumi.StringRef(s.DNSZone + "."), PrivateZone: pulumi.BoolRef(false),
+	})
+	if err == nil && zone != nil && zone.ZoneId != "" {
+		s.DNSZoneID = zone.ZoneId
+		return s, nil
+	}
+
+	reason := "public Route 53 hosted zone lookup failed"
+	if err != nil {
+		message := strings.ToLower(err.Error())
+		// Keep the service failure category without publishing the provider response.
+		switch {
+		case strings.Contains(message, "accessdenied"), strings.Contains(message, "not authorized"), strings.Contains(message, "access denied"):
+			reason = "the deployment role cannot look up the public Route 53 hosted zone"
+		case strings.Contains(message, "multiple"):
+			reason = "multiple Route 53 hosted zones matched"
+		case strings.Contains(message, "no matching"), strings.Contains(message, "no hosted zone"):
+			reason = "no matching public Route 53 hosted zone"
+		}
+	}
+	return s, fmt.Errorf("mobile DNS for %q: %s for %q. Set mobileDNSZoneID to the authoritative public zone ID if it is in Route 53, or configure mobileDNSProvider and mobileDNSZoneID for Cloudflare if it hosts the zone", host, reason, s.DNSZone)
+}
+
+func deployMobileDomain(ctx *pulumi.Context, name string, s MobileSettings, host string, api *apigatewayv2.Api, stage *apigatewayv2.Stage, opts []pulumi.ResourceOption) error {
 	cert, err := acm.NewCertificate(ctx, name+"-demo-certificate", &acm.CertificateArgs{
 		DomainName: pulumi.String(host), ValidationMethod: pulumi.String("DNS"),
 	}, opts...)

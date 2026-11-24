@@ -1,6 +1,7 @@
 package teststack
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
@@ -14,6 +15,9 @@ func TestMobileDemoDomainAndAuthorization(t *testing.T) {
 			m := &mocks{}
 			dns := MobileSettings{BaseDomain: "components.email-verification.apexfission.com",
 				DNSZone: "apexfission.com", DNSProvider: provider, DNSZoneID: strings.Repeat("a", 32)}
+			if provider == "route53" {
+				dns.DNSZoneID = ""
+			}
 			s := Settings{Domain: "tags.example.test", Sender: "sender@example.test", Recipient: "tester@example.test",
 				Archive: archive(t), Policy: config.Defaults(), Mobile: dns}
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error { return Deploy(ctx, s) }, pulumi.WithMocks("email-verification-testhost", "test-qa", m))
@@ -60,6 +64,9 @@ func TestMobileDemoDomainAndAuthorization(t *testing.T) {
 						t.Fatal("hostname did not use the environment")
 					}
 				case "aws:route53/record:Record", "cloudflare:index/dnsRecord:DnsRecord":
+					if r.TypeToken == "aws:route53/record:Record" && r.Inputs["zoneId"].StringValue() != "ZTESTHOST" {
+						t.Fatal("record did not use the public zone resolved before registration")
+					}
 					if r.Inputs["type"].StringValue() != "CNAME" {
 						t.Fatal("unexpected record type")
 					}
@@ -113,5 +120,31 @@ func TestMobileDefaultsUseDeploymentDomain(t *testing.T) {
 	}
 	if got := (MobileSettings{}).withOwnershipDefaults("apexfission.com"); got.BaseDomain != "" {
 		t.Fatalf("enabled mobile DNS without a provider: %+v", got)
+	}
+}
+
+func TestMobileDNSLookupFailureIsActionableBeforeRegistration(t *testing.T) {
+	m := &mocks{zoneLookupErr: errors.New("no matching Route 53 Hosted Zone found: fixture private diagnostic")}
+	s := Settings{
+		Domain: "example.test", Sender: "sender@example.test", Recipient: "tester@example.test",
+		Archive: archive(t), Policy: config.Defaults(), Mobile: MobileSettings{DNSProvider: "route53"},
+	}
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error { return Deploy(ctx, s) },
+		pulumi.WithMocks("email-verification-testhost", "test-dev", m))
+	if err == nil {
+		t.Fatal("missing public hosted zone was accepted")
+	}
+	for _, part := range []string{"dev.components.email-verification.example.test", "no matching public Route 53 hosted zone", "mobileDNSZoneID", "mobileDNSProvider"} {
+		if !strings.Contains(err.Error(), part) {
+			t.Fatalf("missing %q in error: %v", part, err)
+		}
+	}
+	if strings.Contains(err.Error(), "fixture private diagnostic") {
+		t.Fatal("provider diagnostics leaked")
+	}
+	for _, r := range m.rows {
+		if r.TypeToken != "pulumi:pulumi:Stack" {
+			t.Fatalf("registered %s before checking mobile DNS", r.Name)
+		}
 	}
 }

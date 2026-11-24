@@ -16,11 +16,20 @@ import (
 )
 
 type mocks struct {
-	mu   sync.Mutex
-	rows []pulumi.MockResourceArgs
+	mu            sync.Mutex
+	rows          []pulumi.MockResourceArgs
+	zoneLookupErr error
 }
 
-func (m *mocks) Call(a pulumi.MockCallArgs) (resource.PropertyMap, error) { return a.Args, nil }
+func (m *mocks) Call(a pulumi.MockCallArgs) (resource.PropertyMap, error) {
+	if a.Token == "aws:route53/getZone:getZone" {
+		if m.zoneLookupErr != nil {
+			return nil, m.zoneLookupErr
+		}
+		return resource.PropertyMap{"zoneId": resource.NewStringProperty("ZTESTHOST")}, nil
+	}
+	return a.Args, nil
+}
 func (m *mocks) NewResource(a pulumi.MockResourceArgs) (string, resource.PropertyMap, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()

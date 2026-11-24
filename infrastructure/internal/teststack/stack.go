@@ -78,6 +78,10 @@ func Deploy(ctx *pulumi.Context, s Settings) error {
 		if err != nil {
 			return err
 		}
+		s.Mobile, err = s.Mobile.resolveDNSZone(ctx, mobileHost)
+		if err != nil {
+			return err
+		}
 	}
 	// Exact scope is explicit in the program configuration; this is never the
 	// parent application's default stack entry point.
