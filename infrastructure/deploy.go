@@ -10,6 +10,8 @@ import (
 	composer "github.com/lambdawalker/go.infra.composer"
 	adapter "github.com/lambdawalker/go.infra.composer/adapters/pulumi"
 	"github.com/lambdawalker/go.infra.composer/adapters/pulumi/awslabels"
+	"github.com/lambdawalker/go.infra.composer/adapters/pulumi/awsnames"
+	names "github.com/lambdawalker/go.infra.composer/awsnames"
 	"github.com/lambdawalker/go.infra.composer/ownership"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/dynamodb"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/kms"
@@ -63,7 +65,7 @@ func Deploy(ctx *pulumi.Context, plan *composer.Plan, metadata ownership.Metadat
 			return adapter.Registered{}, err
 		}
 		children := []pulumi.ResourceOption{pulumi.Parent(component), awslabels.Option(scope), pulumi.Protect(true)}
-		table, err := dynamodb.NewTable(scope, name+"-transactions", &dynamodb.TableArgs{
+		table, err := awsnames.NewAutoNamed(scope, names.DynamoDBTable, dynamodb.NewTable, name+"-transactions", &dynamodb.TableArgs{
 			BillingMode: pulumi.String("PAY_PER_REQUEST"), HashKey: pulumi.String("pk"),
 			Attributes:           dynamodb.TableAttributeArray{&dynamodb.TableAttributeArgs{Name: pulumi.String("pk"), Type: pulumi.String("S")}},
 			PointInTimeRecovery:  &dynamodb.TablePointInTimeRecoveryArgs{Enabled: pulumi.Bool(true)},

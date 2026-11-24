@@ -15,6 +15,7 @@ import (
 	adapter "github.com/lambdawalker/go.infra.composer/adapters/pulumi"
 	"github.com/lambdawalker/go.infra.composer/adapters/pulumi/awslabels"
 	"github.com/lambdawalker/go.infra.composer/adapters/pulumi/awsnames"
+	names "github.com/lambdawalker/go.infra.composer/awsnames"
 	"github.com/lambdawalker/go.infra.composer/ownership"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/cloudwatch"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/dynamodb"
@@ -122,7 +123,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 			return adapter.Registered{}, e
 		}
 		child := []pulumi.ResourceOption{pulumi.Parent(component), awslabels.Option(ctx)}
-		table, e := dynamodb.NewTable(ctx, name+"-records", &dynamodb.TableArgs{BillingMode: pulumi.String("PAY_PER_REQUEST"), HashKey: pulumi.String("pk"), Attributes: dynamodb.TableAttributeArray{&dynamodb.TableAttributeArgs{Name: pulumi.String("pk"), Type: pulumi.String("S")}}, PointInTimeRecovery: &dynamodb.TablePointInTimeRecoveryArgs{Enabled: pulumi.Bool(true)}, ServerSideEncryption: &dynamodb.TableServerSideEncryptionArgs{Enabled: pulumi.Bool(true)}}, append(child, pulumi.Protect(true))...)
+		table, e := awsnames.NewAutoNamed(ctx, names.DynamoDBTable, dynamodb.NewTable, name+"-records", &dynamodb.TableArgs{BillingMode: pulumi.String("PAY_PER_REQUEST"), HashKey: pulumi.String("pk"), Attributes: dynamodb.TableAttributeArray{&dynamodb.TableAttributeArgs{Name: pulumi.String("pk"), Type: pulumi.String("S")}}, PointInTimeRecovery: &dynamodb.TablePointInTimeRecoveryArgs{Enabled: pulumi.Bool(true)}, ServerSideEncryption: &dynamodb.TableServerSideEncryptionArgs{Enabled: pulumi.Bool(true)}}, append(child, pulumi.Protect(true))...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
@@ -134,7 +135,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		if e != nil {
 			return adapter.Registered{}, e
 		}
-		secret, e := secretsmanager.NewSecret(ctx, name+"-secrets", &secretsmanager.SecretArgs{RecoveryWindowInDays: pulumi.Int(7)}, append(child, pulumi.Protect(true))...)
+		secret, e := awsnames.NewAutoNamed(ctx, names.SecretsManager, secretsmanager.NewSecret, name+"-secrets", &secretsmanager.SecretArgs{RecoveryWindowInDays: pulumi.Int(7)}, append(child, pulumi.Protect(true))...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
@@ -146,16 +147,20 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		if e != nil {
 			return adapter.Registered{}, e
 		}
-		sender, e := ses.NewEmailIdentity(ctx, name+"-sender", &ses.EmailIdentityArgs{Email: pulumi.String(s.Sender)}, child...)
+		identity, e := awsnames.Input(names.SESEmailIdentity, pulumi.String(s.Sender))
 		if e != nil {
 			return adapter.Registered{}, e
 		}
-		role, e := iam.NewRole(ctx, name+"-role", &iam.RoleArgs{AssumeRolePolicy: pulumi.String(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}`)}, child...)
+		sender, e := ses.NewEmailIdentity(ctx, name+"-sender", &ses.EmailIdentityArgs{Email: identity}, child...)
+		if e != nil {
+			return adapter.Registered{}, e
+		}
+		role, e := awsnames.NewAutoNamed(ctx, names.IAMRole, iam.NewRole, name+"-role", &iam.RoleArgs{AssumeRolePolicy: pulumi.String(`{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"lambda.amazonaws.com"},"Action":"sts:AssumeRole"}]}`)}, child...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
 		// A fixed logical log group allows an exact log-write permission before Lambda.
-		logs, e := cloudwatch.NewLogGroup(ctx, name+"-logs", &cloudwatch.LogGroupArgs{RetentionInDays: pulumi.Int(7)}, child...)
+		logs, e := awsnames.NewAutoNamed(ctx, names.CloudWatchLogGroup, cloudwatch.NewLogGroup, name+"-logs", &cloudwatch.LogGroupArgs{RetentionInDays: pulumi.Int(7)}, child...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
@@ -174,7 +179,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 			raw, e := json.Marshal(map[string]any{"Version": "2012-10-17", "Statement": statements})
 			return string(raw), e
 		}).(pulumi.StringOutput)
-		permissions, e := iam.NewRolePolicy(ctx, name+"-permissions", &iam.RolePolicyArgs{Role: role.ID(), Policy: policy}, child...)
+		permissions, e := awsnames.NewAutoNamed(ctx, names.IAMInlinePolicy, iam.NewRolePolicy, name+"-permissions", &iam.RolePolicyArgs{Role: role.ID(), Policy: policy}, child...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
@@ -198,7 +203,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		if e != nil {
 			return adapter.Registered{}, e
 		}
-		schedule, e := cloudwatch.NewEventRule(ctx, name+"-worker", &cloudwatch.EventRuleArgs{ScheduleExpression: pulumi.String("rate(1 minute)")}, child...)
+		schedule, e := awsnames.NewAutoNamed(ctx, names.EventBridgeRule, cloudwatch.NewEventRule, name+"-worker", &cloudwatch.EventRuleArgs{ScheduleExpression: pulumi.String("rate(1 minute)")}, child...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
@@ -206,7 +211,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		if e != nil {
 			return adapter.Registered{}, e
 		}
-		_, e = cloudwatch.NewEventTarget(ctx, name+"-worker-target", &cloudwatch.EventTargetArgs{Rule: schedule.Name, Arn: function.Arn, Input: pulumi.String(`{"action":"tick"}`), RetryPolicy: &cloudwatch.EventTargetRetryPolicyArgs{MaximumRetryAttempts: pulumi.Int(2), MaximumEventAgeInSeconds: pulumi.Int(120)}}, append(child, pulumi.DependsOn([]pulumi.Resource{invoke}))...)
+		_, e = awsnames.NewAutoNamed(ctx, names.EventBridgeTarget, cloudwatch.NewEventTarget, name+"-worker-target", &cloudwatch.EventTargetArgs{Rule: schedule.Name, Arn: function.Arn, Input: pulumi.String(`{"action":"tick"}`), RetryPolicy: &cloudwatch.EventTargetRetryPolicyArgs{MaximumRetryAttempts: pulumi.Int(2), MaximumEventAgeInSeconds: pulumi.Int(120)}}, append(child, pulumi.DependsOn([]pulumi.Resource{invoke}))...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
