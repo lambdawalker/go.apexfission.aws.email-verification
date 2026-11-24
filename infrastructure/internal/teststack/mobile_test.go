@@ -14,15 +14,23 @@ func TestMobileDemoDomainAndAuthorization(t *testing.T) {
 		t.Run(provider, func(t *testing.T) {
 			m := &mocks{}
 			dns := MobileSettings{BaseDomain: "components.email-verification.apexfission.com",
-				DNSZone: "apexfission.com", DNSProvider: provider, DNSZoneID: strings.Repeat("a", 32)}
-			if provider == "route53" {
-				dns.DNSZoneID = ""
-			}
+				DNSZone: "apexfission.com", DNSProvider: provider}
 			s := Settings{Domain: "tags.example.test", Sender: "sender@example.test", Recipient: "tester@example.test",
 				Archive: archive(t), Policy: config.Defaults(), Mobile: dns}
 			err := pulumi.RunErr(func(ctx *pulumi.Context) error { return Deploy(ctx, s) }, pulumi.WithMocks("email-verification-testhost", "test-qa", m))
 			if err != nil {
 				t.Fatal(err)
+			}
+			if provider == "cloudflare" {
+				for _, invoke := range m.invocations {
+					if invoke.Token == "aws:route53/getZone:getZone" {
+						t.Fatal("Cloudflare selection attempted a Route 53 lookup")
+					}
+					if invoke.Token == "cloudflare:index/getZones:getZones" &&
+						(invoke.Args["name"].StringValue() != dns.DNSZone || invoke.Args["status"].StringValue() != "active") {
+						t.Fatal("unexpected Cloudflare zone filters")
+					}
+				}
 			}
 			host := "qa.components.email-verification.apexfission.com"
 			routes, records, mappings, authorizers := 0, 0, 0, 0
@@ -66,6 +74,10 @@ func TestMobileDemoDomainAndAuthorization(t *testing.T) {
 				case "aws:route53/record:Record", "cloudflare:index/dnsRecord:DnsRecord":
 					if r.TypeToken == "aws:route53/record:Record" && r.Inputs["zoneId"].StringValue() != "ZTESTHOST" {
 						t.Fatal("record did not use the public zone resolved before registration")
+					}
+					if provider == "cloudflare" && (r.TypeToken != "cloudflare:index/dnsRecord:DnsRecord" ||
+						r.Inputs["zoneId"].StringValue() != strings.Repeat("a", 32) || r.Inputs["proxied"].BoolValue()) {
+						t.Fatal("record did not use the resolved Cloudflare zone and DNS-only mode")
 					}
 					if r.Inputs["type"].StringValue() != "CNAME" {
 						t.Fatal("unexpected record type")
@@ -146,5 +158,43 @@ func TestMobileDNSLookupFailureIsActionableBeforeRegistration(t *testing.T) {
 		if r.TypeToken != "pulumi:pulumi:Stack" {
 			t.Fatalf("registered %s before checking mobile DNS", r.Name)
 		}
+	}
+}
+
+func TestCloudflareZoneLookupRejectsAmbiguousResultAndHidesProviderResponse(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		mock *mocks
+		want string
+	}{
+		{"permission failure", &mocks{zoneLookupErr: errors.New("fixture private diagnostic")}, "CLOUDFLARE_API_TOKEN"},
+		{"no results", &mocks{cloudflareIDs: []string{}}, "did not return one active zone"},
+		{"multiple results", &mocks{cloudflareIDs: []string{strings.Repeat("a", 32), strings.Repeat("b", 32)}}, "did not return one active zone"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := Settings{
+				Domain: "example.test", Sender: "sender@example.test", Recipient: "tester@example.test",
+				Archive: archive(t), Policy: config.Defaults(), Mobile: MobileSettings{DNSProvider: "cloudflare"},
+			}
+			err := pulumi.RunErr(func(ctx *pulumi.Context) error { return Deploy(ctx, s) },
+				pulumi.WithMocks("email-verification-testhost", "test-dev", tc.mock))
+			if err == nil || !strings.Contains(err.Error(), tc.want) || !strings.Contains(err.Error(), "mobileDNSZoneID") ||
+				strings.Contains(err.Error(), "fixture private diagnostic") {
+				t.Fatalf("unexpected Cloudflare lookup error: %v", err)
+			}
+			for _, r := range tc.mock.rows {
+				if r.TypeToken != "pulumi:pulumi:Stack" {
+					t.Fatalf("registered %s before resolving a Cloudflare zone", r.Name)
+				}
+			}
+		})
+	}
+}
+
+func TestExplicitCloudflareZoneSkipsLookup(t *testing.T) {
+	settings := MobileSettings{DNSProvider: "cloudflare", DNSZoneID: strings.Repeat("b", 32)}
+	got, err := settings.resolveDNSZone(nil, "dev.example.test")
+	if err != nil || got != settings {
+		t.Fatalf("explicit zone changed: %+v, %v", got, err)
 	}
 }

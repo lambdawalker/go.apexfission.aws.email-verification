@@ -49,7 +49,7 @@ The wizard remembers these project inputs per environment.
 | SES From address (`--sender`) | `verify` or `verify-demo@example.com` | A local part uses `<environment>.components.email-verification.<base-domain>`. The interactive default is `verify`. An explicit full address can use a different domain. Use an inbox you can access to confirm the SES email identity. |
 | Test recipient (`--recipient`) | `tester@example.com` | Use the full address that will receive the code. In the SES sandbox, verify it in the deployment's AWS region before testing. |
 | Ownership domain (`--domain`) | `apexfission.com` | Enter the base domain. It also supplies tags, reports, and the default Android API hostname. |
-| Sender domain's public DNS provider (`--dnsprovider`) | `route53` or `cloudflare` | Pick the provider that serves the public DNS for the domain in the From address. The registrar may be different. |
+| Public DNS provider (`--dnsprovider`) | `route53` or `cloudflare` | Select the provider serving the sender domain. The mobile API uses it by default. |
 
 The test stack creates an SES email-address identity. The chosen address must
 be able to receive the SES verification email. Provision a mailbox or forwarding

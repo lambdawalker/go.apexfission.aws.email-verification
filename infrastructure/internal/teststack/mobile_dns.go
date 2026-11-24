@@ -12,10 +12,21 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+const cloudflareProviderVersion = "6.20.0"
+
 func (s MobileSettings) resolveDNSZone(ctx *pulumi.Context, host string) (MobileSettings, error) {
-	if s.DNSProvider != "route53" || s.DNSZoneID != "" {
+	if s.DNSZoneID != "" {
 		return s, nil
 	}
+	if s.DNSProvider == "cloudflare" {
+		zoneID, err := lookupCloudflareZone(ctx, s.DNSZone)
+		if err != nil {
+			return s, fmt.Errorf("mobile DNS for %q: %w", host, err)
+		}
+		s.DNSZoneID = zoneID
+		return s, nil
+	}
+
 	zone, err := route53.LookupZone(ctx, &route53.LookupZoneArgs{
 		Name: pulumi.StringRef(s.DNSZone + "."), PrivateZone: pulumi.BoolRef(false),
 	})
@@ -37,7 +48,27 @@ func (s MobileSettings) resolveDNSZone(ctx *pulumi.Context, host string) (Mobile
 			reason = "no matching public Route 53 hosted zone"
 		}
 	}
-	return s, fmt.Errorf("mobile DNS for %q: %s for %q. Set mobileDNSZoneID to the authoritative public zone ID if it is in Route 53, or configure mobileDNSProvider and mobileDNSZoneID for Cloudflare if it hosts the zone", host, reason, s.DNSZone)
+	return s, fmt.Errorf("mobile DNS for %q: %s for %q. Set mobileDNSZoneID to the authoritative public zone ID if it is in Route 53, or configure mobileDNSProviderOverride for Cloudflare if it hosts the zone", host, reason, s.DNSZone)
+}
+
+// Invoke the zone lookup from the same pinned provider that writes the records.
+func lookupCloudflareZone(ctx *pulumi.Context, name string) (string, error) {
+	var lookup struct {
+		Results []struct {
+			ID     string `pulumi:"id"`
+			Name   string `pulumi:"name"`
+			Status string `pulumi:"status"`
+		} `pulumi:"results"`
+	}
+	args := map[string]any{"name": name, "status": "active", "maxItems": 2}
+	if err := ctx.Invoke("cloudflare:index/getZones:getZones", args, &lookup, pulumi.Version(cloudflareProviderVersion)); err != nil {
+		return "", fmt.Errorf("Cloudflare lookup failed for zone %q. Check CLOUDFLARE_API_TOKEN has Zone Read for this zone, or set mobileDNSZoneID to its exact zone ID", name)
+	}
+	if len(lookup.Results) != 1 || !strings.EqualFold(lookup.Results[0].Name, name) ||
+		lookup.Results[0].Status != "active" || !cloudflareZoneID.MatchString(lookup.Results[0].ID) {
+		return "", fmt.Errorf("Cloudflare lookup did not return one active zone named %q. Check the selected domain and token scope, or set mobileDNSZoneID to the exact zone ID", name)
+	}
+	return lookup.Results[0].ID, nil
 }
 
 func deployMobileDomain(ctx *pulumi.Context, name string, s MobileSettings, host string, api *apigatewayv2.Api, stage *apigatewayv2.Stage, opts []pulumi.ResourceOption) error {
@@ -109,7 +140,7 @@ func mobileCNAME(ctx *pulumi.Context, name string, s MobileSettings, recordName,
 		err := ctx.RegisterResource("cloudflare:index/dnsRecord:DnsRecord", name, pulumi.Map{
 			"zoneId": pulumi.String(s.DNSZoneID), "name": trimDot(validName), "content": trimDot(target),
 			"type": pulumi.String("CNAME"), "ttl": pulumi.Float64(300), "proxied": pulumi.Bool(false),
-		}, &record, append(opts, pulumi.Version("6.20.0"))...)
+		}, &record, append(opts, pulumi.Version(cloudflareProviderVersion))...)
 		if err != nil {
 			return pulumi.StringOutput{}, err
 		}

@@ -106,20 +106,23 @@ the leading environment label. With `apexfission.com` as the ownership domain:
 | `test-dev` | `https://dev.components.email-verification.apexfission.com` |
 | `test-qa` | `https://qa.components.email-verification.apexfission.com` |
 
-Preview and Deploy include the endpoint resources. The default DNS zone is
-the public Route 53 zone for the ownership domain. Existing Pulumi values for
-`mobileBaseDomain` and `mobileDNSZone` take precedence. In the test host
-Pulumi directory, use `pulumi config set` to select a different base domain
-or delegated zone. If no Route 53 zone ID is configured, the program looks
-up the public zone before registering test-host resources. The selected AWS
-role must be able to find it. Set `mobileDNSZoneID` to select the authoritative
-public zone explicitly if the name lookup cannot pick it.
+Preview and Deploy include the endpoint resources. The wizard's
+**Public DNS provider** selection supplies the default for the mobile API.
+The program looks up the public Route 53 zone or the active Cloudflare zone
+for the ownership domain before registering test-host resources.
 
-When using Cloudflare, set `mobileDNSProvider` to `cloudflare`, set
-`mobileDNSZoneID`, and provide `CLOUDFLARE_API_TOKEN` with DNS write access to
-that zone. For GitHub deployment, supply it as a protected environment secret.
-The wizard's **Sender DNS provider** field applies to the SES sender. The
-mobile endpoint reads its DNS settings from Pulumi stack configuration.
+For Cloudflare, set `CLOUDFLARE_API_TOKEN` before launching the wizard, or
+use the Pulumi provider's secret configuration. The token needs DNS write
+access and Zone Read for automatic zone lookup. Set `mobileDNSZoneID`
+in Pulumi configuration to use a known zone ID and skip the lookup.
+For GitHub deployment, supply the token as a protected environment secret.
+
+Set `mobileDNSProviderOverride` in Pulumi configuration to use a different
+provider for the mobile API. Existing `mobileBaseDomain` and `mobileDNSZone`
+values still select a custom hostname and zone. The wizard used to seed
+`mobileDNSProvider=route53` automatically. When there is no custom mobile
+DNS configuration, the saved wizard choice takes precedence over that
+legacy value.
 
 The deployment role needs access to manage the demo's API Gateway, certificate,
 Cognito resources, and selected Route 53 zone if applicable. Inviting users to
