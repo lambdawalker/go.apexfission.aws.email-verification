@@ -5,6 +5,13 @@ The runtime remains an imported Go library. The `feature` package uses
 module uses Composer's Pulumi adapter and native AWS constructors. Importing the
 runtime does not import Pulumi. This is a foundation, not a complete AWS service.
 
+The isolated test-host Pulumi entry point also uses `composer.Application`.
+It registers the verifier and the test host as features, binds their
+verification contract with `Application.Inject`, and deploys the plan through
+the Composer Pulumi adapter. The test-host repository owns the Pulumi component
+factory that builds the host-specific resources, including the Lambda and mobile
+API. The shared deployment wizard is provided by Composer's `deploycli` module.
+
 ## Ownership and contract
 
 | Artifact | Owner | Purpose |

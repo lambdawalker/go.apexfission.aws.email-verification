@@ -13,10 +13,32 @@
   "BuildDir": "dist/testhost",
   "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired", "testHostMobileURL", "testHostMobileUserPoolID", "testHostMobileClientID", "testHostMobileIssuer"],
   "InputsFile": "testhost.json",
+  "Functions": {
+    "defaultSenderAddress": {
+      "Parameters": {"Address": "text", "Domain": "domain"},
+      "Result": "email",
+      "Template": "{{if contains .Address \"@\"}}{{.Address}}{{else}}{{.Address}}@{{.Domain}}{{end}}"
+    }
+  },
   "Inputs": [
-    {"Name": "Sender", "Label": "SES From address", "Help": "Enter a full email address whose inbox you can access for SES verification.", "Kind": "email", "GitHubVariable": "BENCH_SENDER"},
+    {"Name": "Domain", "Label": "Ownership domain", "Help": "Used for AWS resource tags, reports, and the suggested SES From address.", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
+    {
+      "Name": "Sender",
+      "Label": "SES From address",
+      "Help": "Use the suggested address, enter a local part, or enter a full address whose inbox you can access for SES verification.",
+      "Kind": "email",
+      "GitHubVariable": "BENCH_SENDER",
+      "Compose": {
+        "Function": "defaultSenderAddress",
+        "DefaultInput": "verify",
+        "UseLegacyValueAsInput": true,
+        "Parameters": {
+          "Address": {"Source": "userInput"},
+          "Domain": {"Source": "field", "Name": "Domain"}
+        }
+      }
+    },
     {"Name": "Recipient", "Label": "Test recipient", "Help": "Enter the full address that receives the code. In the SES sandbox, verify this address in the deployment region.", "Kind": "email", "GitHubVariable": "BENCH_RECIPIENT"},
-    {"Name": "Domain", "Label": "Ownership domain", "Help": "Used for AWS resource tags and reports.", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
     {"Name": "DNSProvider", "Label": "Sender DNS provider", "Help": "Choose the provider serving public DNS for the domain in the From address.", "Kind": "dnsProvider", "GitHubVariable": "BENCH_DNS_PROVIDER"}
   ],
   "ConfigDefaults": {

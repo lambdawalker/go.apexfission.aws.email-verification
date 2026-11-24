@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/c6a586d0dd860da1087cf0cd7f6f6b64922d36fa/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/630cc0cbffca5fa81056d2da46a55ff5edee2334/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -42,13 +42,13 @@ never saved. The Pulumi passphrase is passed through the process environment.
 Keep backups of the vault, unlock password, state URL and Pulumi passphrase.
 S3 encryption, Pulumi secret encryption and the local vault are distinct protections.
 
-The wizard remembers these required inputs per environment.
+The wizard remembers these project inputs per environment.
 
 | Prompt | Example | What to do |
 | --- | --- | --- |
-| SES From address (`--sender`) | `verify-demo@example.com` | Use a full address whose inbox you can access. After deployment creates the SES email identity, open the verification link sent to that address. |
+| SES From address (`--sender`) | `verify` or `verify-demo@example.com` | A local part uses the ownership domain. The interactive default is `verify`. An explicit full address can use a different domain. Use an inbox you can access to confirm the SES email identity. |
 | Test recipient (`--recipient`) | `tester@example.com` | Use the full address that will receive the code. In the SES sandbox, verify it in the deployment's AWS region before testing. |
-| Ownership domain (`--domain`) | `example.com` | Use a domain value for resource tags and reports. The wizard does not host a URL on this domain. |
+| Ownership domain (`--domain`) | `example.com` | Used for tags, reports, and the suggested SES From address. |
 | Sender domain's public DNS provider (`--dnsprovider`) | `route53` or `cloudflare` | Pick the provider that serves the public DNS for the domain in the From address. The registrar may be different. |
 
 This test stack uses an SES email-address identity. **No new DNS records are
@@ -79,7 +79,9 @@ explains what it does. Preview is selected by default.
 
 After choosing the deployment scope, enter or review the SES From address,
 test recipient, ownership domain, DNS provider, and AWS settings in a single
-form. Continue validates the form and saves the accepted project inputs as
+form. Editing the ownership domain updates the suggested From address, and the
+form shows the full address before you continue. Previously saved full sender
+addresses are carried forward. Continue validates the form and saves the accepted project inputs as
 defaults for that environment. The wizard then displays sign-in instructions
 and deployment progress. Applying a saved Pulumi plan requires an explicit
 click. Add `--no-open` to print the URL without opening the browser.
