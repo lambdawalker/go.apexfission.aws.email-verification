@@ -202,7 +202,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		if e != nil {
 			return adapter.Registered{}, e
 		}
-		invoke, e := lambda.NewPermission(ctx, name+"-worker-permission", &lambda.PermissionArgs{Action: pulumi.String("lambda:InvokeFunction"), Function: function.Name, Principal: pulumi.String("events.amazonaws.com"), SourceArn: schedule.Arn}, child...)
+		invoke, e := newLambdaPermission(ctx, name+"-worker-permission", &lambda.PermissionArgs{Action: pulumi.String("lambda:InvokeFunction"), Function: function.Name, Principal: pulumi.String("events.amazonaws.com"), SourceArn: schedule.Arn}, child...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
