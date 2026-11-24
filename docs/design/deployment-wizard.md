@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/c073d114ef647a0c5e8b7bee8a8707848c8980f3/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/20aeae68814a6af34dc097aa417ea829ffa41585/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -97,11 +97,24 @@ the launching terminal. The wizard reloads the list and keeps your form edits
 when you finish. Without an attached terminal, run `aws configure sso`
 separately and choose **Refresh AWS profiles**.
 
-After **Setup complete** or after a stopped deployment finishes cleaning up,
-choose **Back to main page** to pick another action in the same browser tab.
-Unlock the vault when prompted to continue with the saved settings. **Close
-wizard** ends the local session after reviewing the result. Terminal and noninteractive runs remain
-available through the same launcher.
+After an action completes, fails, or stops, choose **Back to main page** to
+open the action cards in the same tab. The wizard releases the action's local
+locks before showing its result. Unlock the vault for the next action to use
+the saved settings.
+
+```mermaid
+flowchart TD
+    Menu["Action menu"] --> Run["Unlock vault and run action"]
+    Run --> Result["Review completed, failed, or stopped action"]
+    Result -->|Back to main page| Menu
+    Menu --> Close["Close wizard"]
+    Result --> Close
+```
+
+The browser session has no wizard idle timeout. Choose **Close wizard** from
+the menu or a result, or press Ctrl+C in the terminal to end it. If you close
+the tab, the URL printed in the terminal reopens the session while the
+launcher is running. Terminal and noninteractive runs use the same launchers.
 
 ## Android demo endpoint
 
