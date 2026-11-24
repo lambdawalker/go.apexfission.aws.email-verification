@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/630cc0cbffca5fa81056d2da46a55ff5edee2334/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/e0c5cbe5ae7880373d89b1bea75625a95666acd6/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -46,13 +46,15 @@ The wizard remembers these project inputs per environment.
 
 | Prompt | Example | What to do |
 | --- | --- | --- |
-| SES From address (`--sender`) | `verify` or `verify-demo@example.com` | A local part uses the ownership domain. The interactive default is `verify`. An explicit full address can use a different domain. Use an inbox you can access to confirm the SES email identity. |
+| SES From address (`--sender`) | `verify` or `verify-demo@example.com` | A local part uses `<environment>.components.email-verification.<base-domain>`. The interactive default is `verify`. An explicit full address can use a different domain. Use an inbox you can access to confirm the SES email identity. |
 | Test recipient (`--recipient`) | `tester@example.com` | Use the full address that will receive the code. In the SES sandbox, verify it in the deployment's AWS region before testing. |
-| Ownership domain (`--domain`) | `example.com` | Used for tags, reports, and the suggested SES From address. |
+| Ownership domain (`--domain`) | `apexfission.com` | Enter the base domain. It also supplies tags, reports, and the default Android API hostname. |
 | Sender domain's public DNS provider (`--dnsprovider`) | `route53` or `cloudflare` | Pick the provider that serves the public DNS for the domain in the From address. The registrar may be different. |
 
-This test stack uses an SES email-address identity. **No new DNS records are
-required.** The DNS provider choice is saved for domain setup. If you separately
+The test stack creates an SES email-address identity. The chosen address must
+be able to receive the SES verification email. Provision a mailbox or forwarding
+for the suggested address, or enter an existing full address you can verify.
+The DNS provider choice is saved for domain setup. If you separately
 set up an SES domain identity with Easy DKIM, add the CNAME records SES provides
 in the delegated Route 53 public hosted zone or in Cloudflare DNS with proxying
 disabled. The wizard displays provider guidance and saves the selection.
@@ -98,10 +100,11 @@ available through the same launcher.
 ## Android demo endpoint
 
 Each wizard-managed stack derives its HTTPS hostname from the selected
-environment. For example, `dev` uses
-`https://dev.components.email-verification.apexfission.com`. Setup seeds the
-domain settings. Preview and Deploy include the certificate, DNS records,
-and authenticated API. See the [mobile demo contract and DNS settings](test-host.md#connect-an-android-demo).
+environment and the base domain. For `dev` and `apexfission.com`, the
+default API is `https://dev.components.email-verification.apexfission.com`
+and the default From address is
+`verify@dev.components.email-verification.apexfission.com`. Preview and Deploy
+include the certificate, DNS records, and authenticated API. See the [mobile demo contract and DNS settings](test-host.md#connect-an-android-demo).
 
 ## Actions
 
