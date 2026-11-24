@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/e0c5cbe5ae7880373d89b1bea75625a95666acd6/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/8896e2917d8a94412c3a80085b3c5678641d6d93/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -83,10 +83,14 @@ After choosing the deployment scope, enter or review the SES From address,
 test recipient, ownership domain, DNS provider, and AWS settings in a single
 form. Editing the ownership domain updates the suggested From address, and the
 form shows the full address before you continue. Previously saved full sender
-addresses are carried forward. Continue validates the form and saves the accepted project inputs as
-defaults for that environment. The wizard then displays sign-in instructions
-and deployment progress. Applying a saved Pulumi plan requires an explicit
-click. Add `--no-open` to print the URL without opening the browser.
+addresses are carried forward. The wizard highlights invalid fields as you edit.
+Continue validates the complete form and checks the AWS profile, account, and
+any existing S3 state location. If a check fails, the wizard returns to the
+form with your entries intact and shows the issue next to the relevant field.
+The wizard saves the project defaults after you confirm the verified account.
+It displays sign-in instructions when needed and then shows deployment
+progress. Applying a saved Pulumi plan requires an explicit click. Add
+`--no-open` to print the URL without opening the browser.
 
 Choose **Add AWS SSO profile** in the settings form to start AWS CLI setup in
 the launching terminal. The wizard reloads the list and keeps your form edits
