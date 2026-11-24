@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/06f46171933a5bfb593d74d90ea679f66f5e1602/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/c1fc483b04b7bf8f39b29c809840b5070ad24271/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -117,6 +117,18 @@ The browser session has no wizard idle timeout. Choose **Close wizard** from
 the menu or a result, or press Ctrl+C in the terminal to end it. If you close
 the tab, the URL printed in the terminal reopens the session while the
 launcher is running. Terminal and noninteractive runs use the same launchers.
+
+## AWS artifact names
+
+Infra Composer checks the names supplied by the verifier, demo stack, and
+discovery index. This covers Lambda functions and permissions, DynamoDB
+tables, IAM roles and policies, logs, secrets, EventBridge, API Gateway,
+Cognito, DNS, and SES identities. The wizard also checks the generated
+state bucket name before trying to create it.
+
+The checks cover configured names and the bases used for default auto-naming.
+AWS and Pulumi still validate generated suffixes, provider-assigned IDs,
+custom auto-naming rules, and name availability.
 
 ## Android demo endpoint
 

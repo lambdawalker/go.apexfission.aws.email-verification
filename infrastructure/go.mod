@@ -4,9 +4,9 @@ go 1.27.3
 
 require (
 	github.com/lambdawalker/go.apexfission.aws.email-verification v0.0.0-20261117153625-01604c3809d4
-	github.com/lambdawalker/go.infra.composer v0.0.0-20261124013328-45b7f8e2cd5d
-	github.com/lambdawalker/go.infra.composer/adapters/awsdiscovery v0.0.0-20261124014430-eb124e822a8c
-	github.com/lambdawalker/go.infra.composer/adapters/pulumi v0.0.0-20261124045612-5e92bd03a8f4
+	github.com/lambdawalker/go.infra.composer v0.0.0-20261124050211-12f6df24c8b7
+	github.com/lambdawalker/go.infra.composer/adapters/awsdiscovery v0.0.0-20261124050610-1ccc2db7e60d
+	github.com/lambdawalker/go.infra.composer/adapters/pulumi v0.0.0-20261124050506-c1fc483b04b7
 	github.com/pulumi/pulumi-aws/sdk/v6 v6.83.4
 	github.com/pulumi/pulumi-random/sdk/v4 v4.18.2
 	github.com/pulumi/pulumi/sdk/v3 v3.273.0

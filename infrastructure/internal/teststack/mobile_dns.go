@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/lambdawalker/go.infra.composer/adapters/pulumi/awsnames"
+	names "github.com/lambdawalker/go.infra.composer/awsnames"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/acm"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/apigatewayv2"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/route53"
@@ -68,6 +70,11 @@ func deployMobileDomain(ctx *pulumi.Context, name string, s MobileSettings, host
 }
 
 func mobileCNAME(ctx *pulumi.Context, name string, s MobileSettings, recordName, target pulumi.StringInput, opts ...pulumi.ResourceOption) (pulumi.StringOutput, error) {
+	validName, err := awsnames.Input(names.DNSRecord, recordName)
+	if err != nil {
+		return pulumi.StringOutput{}, err
+	}
+
 	if s.DNSProvider == "cloudflare" {
 		trimDot := func(input pulumi.StringInput) pulumi.StringOutput {
 			return input.ToStringOutput().ApplyT(func(value string) string {
@@ -81,7 +88,7 @@ func mobileCNAME(ctx *pulumi.Context, name string, s MobileSettings, recordName,
 			Name pulumi.StringOutput `pulumi:"name"`
 		}
 		err := ctx.RegisterResource("cloudflare:index/dnsRecord:DnsRecord", name, pulumi.Map{
-			"zoneId": pulumi.String(s.DNSZoneID), "name": trimDot(recordName), "content": trimDot(target),
+			"zoneId": pulumi.String(s.DNSZoneID), "name": trimDot(validName), "content": trimDot(target),
 			"type": pulumi.String("CNAME"), "ttl": pulumi.Float64(300), "proxied": pulumi.Bool(false),
 		}, &record, append(opts, pulumi.Version("6.20.0"))...)
 		if err != nil {
@@ -90,7 +97,7 @@ func mobileCNAME(ctx *pulumi.Context, name string, s MobileSettings, recordName,
 		return record.Name, nil
 	}
 	record, err := route53.NewRecord(ctx, name, &route53.RecordArgs{
-		ZoneId: pulumi.String(s.DNSZoneID), Name: recordName, Type: pulumi.String("CNAME"),
+		ZoneId: pulumi.String(s.DNSZoneID), Name: validName, Type: pulumi.String("CNAME"),
 		Ttl: pulumi.Int(300), Records: pulumi.StringArray{target},
 	}, opts...)
 	if err != nil {
