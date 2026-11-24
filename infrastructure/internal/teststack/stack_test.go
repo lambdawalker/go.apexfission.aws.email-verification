@@ -94,6 +94,18 @@ func TestIsolatedStackWiring(t *testing.T) {
 			identities++
 		case "aws:lambda/function:Function":
 			functions++
+			if r.Name != "testhost-app-lambda" {
+				t.Fatalf("Lambda logical name must produce a valid AWS function name, got %q", r.Name)
+			}
+			foundAlias := false
+			for _, alias := range r.RegisterRPC.GetAliases() {
+				if alias.GetSpec().GetName() == "testhost.app-lambda" {
+					foundAlias = true
+				}
+			}
+			if !foundAlias {
+				t.Fatal("Lambda registration must retain the former dotted name as an alias")
+			}
 			vars := r.Inputs["environment"].ObjectValue()["variables"].ObjectValue()
 			if vars["HOST_TABLE"].StringValue() == vars["VERIFIER_TABLE"].StringValue() {
 				t.Fatal("shared records")

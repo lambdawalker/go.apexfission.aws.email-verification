@@ -171,7 +171,24 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 		}
 		// Only ARNs/configuration go into the environment; secret bytes stay in SM.
 		variables := pulumi.StringMap{"HOST_TABLE": table.Name, "VERIFIER_TABLE": in["table_name"].(pulumi.StringOutput), "KEY_ARN": in["key_arn"].(pulumi.StringOutput), "KEY_ID": in["key_id"].(pulumi.StringOutput), "EMAIL_VERIFICATION_POLICY": in["policy_json"].(pulumi.StringOutput), "SECRET_ARN": secret.Arn, "SENDER": pulumi.String(s.Sender), "RECIPIENT": pulumi.String(s.Recipient), "HOST_ID": pulumi.String(ctx.Project() + "-" + ctx.Stack())}
-		function, e := lambda.NewFunction(ctx, name+"-lambda", &lambda.FunctionArgs{Role: role.Arn, Runtime: pulumi.String("provided.al2023"), Handler: pulumi.String("bootstrap"), Architectures: pulumi.StringArray{pulumi.String("arm64")}, MemorySize: pulumi.Int(256), Timeout: pulumi.Int(120), Code: pulumi.NewFileArchive(s.Archive), Environment: &lambda.FunctionEnvironmentArgs{Variables: variables}, LoggingConfig: &lambda.FunctionLoggingConfigArgs{LogFormat: pulumi.String("Text"), LogGroup: logs.Name}}, append(child, pulumi.DependsOn([]pulumi.Resource{permissions, version}))...)
+		// Pulumi uses the logical name as the base of the AWS function name.
+		// Lambda disallows the dot in Composer's qualified resource name.
+		previousName := name + "-lambda"
+		functionName := strings.ReplaceAll(previousName, ".", "-")
+		function, e := lambda.NewFunction(ctx, functionName, &lambda.FunctionArgs{
+			Role:          role.Arn,
+			Runtime:       pulumi.String("provided.al2023"),
+			Handler:       pulumi.String("bootstrap"),
+			Architectures: pulumi.StringArray{pulumi.String("arm64")},
+			MemorySize:    pulumi.Int(256),
+			Timeout:       pulumi.Int(120),
+			Code:          pulumi.NewFileArchive(s.Archive),
+			Environment:   &lambda.FunctionEnvironmentArgs{Variables: variables},
+			LoggingConfig: &lambda.FunctionLoggingConfigArgs{LogFormat: pulumi.String("Text"), LogGroup: logs.Name},
+		}, append(child,
+			pulumi.Aliases([]pulumi.Alias{{Name: pulumi.String(previousName)}}),
+			pulumi.DependsOn([]pulumi.Resource{permissions, version}),
+		)...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
