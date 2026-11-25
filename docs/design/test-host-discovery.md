@@ -63,8 +63,9 @@ untouched. If publication fails after a successful apply, fix the reported
 issue and rerun deploy. The last published entry stays available until a
 successful replacement or a confirmed retirement.
 
-The deploy wizard offers **Remove an environment** to retire one entry and
-destroy its stack. **Remove all environments and index** first verifies the
+The **Remove this environment** action retires the selected environment's
+entry and destroys its stack. **Remove All Environments and Index** in the
+main menu first verifies the
 existing shared S3 backend and `shared` discovery stack. Enter that index
 backend URL and its Pulumi passphrase. The wizard requests confirmation for
 each saved environment, retires its entry, and destroys its stack. After all
