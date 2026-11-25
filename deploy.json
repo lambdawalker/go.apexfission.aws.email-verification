@@ -3,7 +3,7 @@
   "Title": "APEXFISSION / EMAIL VERIFICATION",
   "Description": "Isolated email verification test host",
   "Repository": "lambdawalker/go.apexfission.aws.email-verification",
-  "Feature": "email-verification",
+  "Feature": "host-app",
   "DefaultProject": "test-host",
   "PulumiProject": "email-verification-testhost",
   "PulumiDir": "infrastructure/cmd/testhost",
@@ -12,6 +12,9 @@
   "BuildPackage": "./cmd/testhost",
   "BuildDir": "dist/testhost",
   "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired", "testHostMobileURL", "testHostMobileUserPoolID", "testHostMobileClientID", "testHostMobileIssuer"],
+  "ArtifactFeaturePrefixes": {
+    "verification.": "email-verification"
+  },
   "ArtifactDescriptions": {
     "verification.backend": "Shared verification storage and signing resources consumed by the isolated test host.",
     "verification.backend-transactions": "Persists verification transactions and their outcomes for replay protection and audit review.",

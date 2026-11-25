@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/9900699876672e08014f6200dad5fea8b51ca465/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/5892eace49e5879e0bfc8c441b04d4c5b8b36bc8/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -89,6 +89,10 @@ as tabs in the header. Switch tabs between operations to load the selected
 environment's settings and artifacts. The cards in **Actions** apply to
 that environment. The project-wide **Remove All Environments and Index**
 command is in the main menu.
+
+In the artifact tree and details, `email-verification` identifies the
+importable verifier's transaction table and signing key. `host-app` identifies
+the demo's infrastructure, including its API, Lambda, and deployment state bucket.
 
 Both browser removal actions ask you to confirm your intent, acknowledge what
 will be removed, and type the exact name shown. Enter the stack name for one
