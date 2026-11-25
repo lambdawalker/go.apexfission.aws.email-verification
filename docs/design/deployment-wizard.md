@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/d2c5ebd5c20fb79f4e318f3747d977089f6a76d0/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/96c517bde7bb5ef39c3e61d9845abd3610da9560/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -82,11 +82,13 @@ If a vault already exists, unlock it with its existing password.
 When you start without `--action`, each available action has a card that
 explains what it does. Preview is selected by default.
 
-Use the **Main menu** beside the title to choose the environment.
+Use the **Main menu** in the header to choose the environment.
 **New Environment** starts a draft, while **Open Environment** lists the
-project's recorded deployments and saved setups. The header displays the
-selected environment. You can switch environments from the Actions tab
-before starting an operation.
+project's recorded deployments and saved setups. Open environments appear
+as tabs in the header. Switch tabs between operations to load the selected
+environment's settings and artifacts. The cards in **Actions** apply to
+that environment. The project-wide **Remove All Environments and Index**
+command is in the main menu.
 
 In **Settings**, enter or review the SES From address,
 test recipient, ownership domain, DNS provider, and AWS settings in a single
