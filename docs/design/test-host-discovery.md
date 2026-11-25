@@ -65,11 +65,12 @@ successful replacement or a confirmed retirement.
 
 The **Remove this environment** action retires the selected environment's
 entry and destroys its stack. **Remove All Environments and Index** in the
-main menu first verifies the
-existing shared S3 backend and `shared` discovery stack. Enter that index
-backend URL and its Pulumi passphrase. The wizard requests confirmation for
-each saved environment, retires its entry, and destroys its stack. After all
-environment stacks are gone, it destroys the shared discovery index stack.
+main menu first verifies the existing shared S3 backend and `shared` discovery
+stack. Enter that index backend URL and its Pulumi passphrase. In the browser,
+the three-step review lists all saved environment stacks and the index. Type
+the project name at the final step to approve the listed targets. The terminal
+asks for the project name and then each stack name. Composer retires each
+environment before destroying its stack and destroys the shared index last.
 If a stack cannot be removed, the wizard stops before removing the index so
 the remaining environments can be recovered and retried. GitHub deployment
 settings can be removed per selected environment using the separate
