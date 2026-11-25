@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/874db9b5f5814ed00c9a568223013852239760e4/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. Both scripts keep the existing flags. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/d2c5ebd5c20fb79f4e318f3747d977089f6a76d0/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -76,10 +76,19 @@ The browser opens a local website. Use **Theme** in the header to choose
 **System**, **Light**, or **Dark**. New wizard sessions follow your system
 appearance. Your selection survives reloads in the current browser tab.
 
+On a fresh checkout, create and confirm the local vault password in the browser.
+If a vault already exists, unlock it with its existing password.
+
 When you start without `--action`, each available action has a card that
 explains what it does. Preview is selected by default.
 
-After choosing the deployment scope, enter or review the SES From address,
+Use the **Main menu** beside the title to choose the environment.
+**New Environment** starts a draft, while **Open Environment** lists the
+project's recorded deployments and saved setups. The header displays the
+selected environment. You can switch environments from the Actions tab
+before starting an operation.
+
+In **Settings**, enter or review the SES From address,
 test recipient, ownership domain, DNS provider, and AWS settings in a single
 form. Editing the ownership domain updates the suggested From address, and the
 form shows the full address before you continue. Previously saved full sender
@@ -116,21 +125,23 @@ open the action cards in the same tab. The wizard releases the action's local
 locks before showing its result. Choose **Copy diagnostics** on a failed or
 stopped result to copy the action, stage, reported error, and recent failed
 command output. The wizard redacts known secrets and common credential
-formats. Unlock the vault for the next action to use the saved settings.
+formats. The active vault unlock is reused across actions.
 
 ```mermaid
 flowchart TD
-    Menu["Action menu"] --> Run["Unlock vault and run action"]
+    Vault["Create or unlock vault"] --> Menu["Choose environment and action"]
+    Menu --> Run["Review settings and run action"]
     Run --> Result["Review completed, failed, or stopped action"]
     Result -->|Back to main page| Menu
     Menu --> Close["Close wizard"]
     Result --> Close
 ```
 
-The browser session has no wizard idle timeout. Choose **Close wizard** from
-the menu or a result, or press Ctrl+C in the terminal to end it. If you close
-the tab, the URL printed in the terminal reopens the session while the
-launcher is running. Terminal and noninteractive runs use the same launchers.
+After 20 minutes of inactivity, the browser wizard locks and asks for the vault
+password again. Choose **Close wizard** from Actions or a result, or press
+Ctrl+C in the terminal to end it. The running browser session records its
+loopback port under `~/.infra-composer/_wizards/`. Use the private URL printed
+in the terminal to reopen the session while the launcher is running.
 
 ## AWS artifact names
 
