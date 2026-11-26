@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/8f3f474b8e116f19b3cf5def32f398e4a205829a/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/4038166d0e4b8b272cc12e44165997c74cb5d4be/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -22,9 +22,9 @@ to stay in the terminal. Headless and SSH sessions go straight to the terminal
 wizard. To open the web interface directly, run `./deploy.sh --server` or
 `.\deploy.bat --server` on Windows. Select a target with a saved deployment
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
-for the Android demo endpoint appears as an engraved glass plaque with raised teal TLS letters and a sapphire ribbon.
+for the Android demo endpoint appears as an engraved glass plaque with a sapphire-blue frame, TLS letters and ribbon.
 Choose **TLS shield** in the Topology toolbar to switch to the ruby shield.
-Secrets Manager resources appear as a ruby glass vault with an open door and a cyan cartridge. The SES sender identity appears as an engraved glass certificate with a plum envelope and ribbon. Each Lambda invocation permission uses the same engraved plaque with a mandarin-orange glass λ and matching ribbon. The function itself uses the standalone orange λ.
+Secrets Manager resources appear as a ruby glass vault with an open door and a cyan cartridge. The SES sender identity appears as an engraved glass certificate with a plum frame, envelope and ribbon. Each Lambda invocation permission uses the same engraved plaque with a mandarin-orange frame, λ and ribbon. The function itself uses the standalone orange λ.
 
 In the topology viewport, drag to orbit, drag with the middle mouse button to pan, and scroll to zoom. Press **Ctrl+B** and drag a rectangle to frame that area, or press **Esc** to cancel. The upper-right controls include six axis views, pan, zoom, and box zoom. Click the **Home** icon or press **Home** in the viewport to restore the opening angle, center, and zoom. **Fit view** frames the visible artifacts at the current angle.
 
