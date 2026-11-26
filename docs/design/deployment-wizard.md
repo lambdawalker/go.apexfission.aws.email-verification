@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/5aa869ba1713177735935db9e6139eee27358b96/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/a84cb12f9bb17713b1e695c65088b0746125ca9a/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -24,7 +24,7 @@ wizard. To open the web interface directly, run `./deploy.sh --server` or
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
 for the Android demo endpoint appears as an engraved glass plaque with a sapphire-blue frame, TLS letters and ribbon.
 Choose **TLS shield** in the Topology toolbar to switch to the ruby shield.
-The API Gateway uses a violet aperture. Its `start`, `confirm`, and `status` routes each use a violet glass sextant with a cyan packet on the scale.
+The API Gateway uses a violet aperture. Its `start`, `confirm`, and `status` routes each use a violet glass sextant with a cyan packet on the scale. Their shared Lambda integration, `testhost.app-demo-invoke`, uses a rounded violet glass clevis and orange glass tongue joined by a silver pin.
 Secrets Manager resources appear as a ruby glass vault with an open door and a cyan cartridge. The SES sender identity appears as an engraved glass certificate with a plum frame, envelope and ribbon. Each Lambda invocation permission uses the same engraved plaque with a mandarin-orange frame, λ and ribbon. The function itself uses the standalone orange λ.
 
 The IAM execution role has a ruby person silhouette, ACM certificate validation has emerald ACM lettering, and the API Gateway JWT authorizer has teal JWT lettering. All three share the engraved certificate shape and matching frame and ribbon.
