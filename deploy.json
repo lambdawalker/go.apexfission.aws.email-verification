@@ -15,6 +15,9 @@
   "ArtifactFeaturePrefixes": {
     "verification.": "email-verification"
   },
+  "ArtifactIconVariants": {
+    "testhost.app-demo-auth": "jwt"
+  },
   "ArtifactDescriptions": {
     "verification.backend": "Shared verification storage and signing resources consumed by the isolated test host.",
     "verification.backend-transactions": "Persists verification transactions and their outcomes for replay protection and audit review.",
