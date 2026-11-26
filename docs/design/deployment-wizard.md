@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/5ddd31c17251670ae38e74321b72f0712321da26/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/c1a99474cecd5c6e05914650e8c8d6986f79361a/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -21,7 +21,8 @@ in the terminal or launch the web interface. Press Enter or wait 15 seconds
 to stay in the terminal. Headless and SSH sessions go straight to the terminal
 wizard. To open the web interface directly, run `./deploy.sh --server` or
 `.\deploy.bat --server` on Windows. Select a target with a saved deployment
-and open **Topology** to see its AWS resources as 3D models.
+and open **Topology** to see its AWS resources as 3D models. The ACM certificate
+for the Android demo endpoint appears as a ruby glass shield with ivory TLS lettering.
 
 After choosing an interface, enter the local vault passphrase. The wizard
 collects settings and displays them for review before AWS or GitHub sign-in.
