@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/5892eace49e5879e0bfc8c441b04d4c5b8b36bc8/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/cd0ce79e50667401a1d5b4da517d58c1c061adce/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -93,6 +93,21 @@ command is in the main menu.
 In the artifact tree and details, `email-verification` identifies the
 importable verifier's transaction table and signing key. `host-app` identifies
 the demo's infrastructure, including its API, Lambda, and deployment state bucket.
+Click an owner badge to filter both the artifact tree and proposed changes.
+The owner filters show artifact totals and the number of proposed operations.
+
+**Overview** shows the most recent successful deployment and failed attempt for
+the selected environment and target. Download a report from either entry.
+Use **Check drift** on a saved deployment to verify its managed resources.
+The check records when it ran and lists external changes, missing resources,
+and resources it could not verify. It previews a refresh without updating the
+Pulumi stack.
+
+In **Proposed changes**, deletion and replacement steps appear first. Selecting
+a change shows before-and-after values for supported settings and replacement
+fields when Pulumi reports them. **Depends on** and **Used by** in Artifact
+details let you navigate between resources linked in recorded state or the
+current preview.
 
 Both browser removal actions ask you to confirm your intent, acknowledge what
 will be removed, and type the exact name shown. Enter the stack name for one
