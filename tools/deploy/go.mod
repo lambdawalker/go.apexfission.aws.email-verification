@@ -20,7 +20,7 @@ require (
 	github.com/aws/smithy-go v1.22.2 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
 	github.com/lambdawalker/go.infra.composer v0.0.0-20261125233535-2579e8a3cf4f // indirect
-	github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261126052106-75cdcd2372cf // indirect
+	github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261126103353-4712ddf35639 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
