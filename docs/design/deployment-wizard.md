@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/e3d749d1df335046311333f42e03db674c50e640/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/46650755989abe0f934fad050cb310e8f91ee9e5/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -24,7 +24,7 @@ wizard. To open the web interface directly, run `./deploy.sh --server` or
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
 for the Android demo endpoint appears as an engraved glass plaque with raised teal TLS letters and a sapphire ribbon.
 Choose **TLS shield** in the Topology toolbar to switch to the ruby shield.
-Secrets Manager resources appear as a ruby glass vault with an open door and a cyan cartridge. The SES sender identity appears as an engraved glass certificate with a plum envelope and ribbon.
+Secrets Manager resources appear as a ruby glass vault with an open door and a cyan cartridge. The SES sender identity appears as an engraved glass certificate with a plum envelope and ribbon. Each Lambda invocation permission uses the same engraved plaque with an orange λ and a jade-green ribbon. The function itself uses the standalone orange λ.
 
 In the topology viewport, drag to orbit, drag with the middle mouse button to pan, and scroll to zoom. Press **Ctrl+B** and drag a rectangle to frame that area, or press **Esc** to cancel. The upper-right controls include six axis views, pan, zoom, and box zoom. Click the **Home** icon or press **Home** in the viewport to restore the opening angle, center, and zoom. **Fit view** frames the visible artifacts at the current angle.
 
