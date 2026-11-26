@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/94164de17bfc019ceeb9416061a983bb825d9ab2/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/3e63214c2fa8b34b7b5e8bafd75e0761e603e72e/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -23,7 +23,7 @@ wizard. To open the web interface directly, run `./deploy.sh --server` or
 `.\deploy.bat --server` on Windows. Select a target with a saved deployment
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
 for the Android demo endpoint appears as a ruby glass shield with ivory TLS lettering.
-Secrets Manager resources appear as a ruby glass vault with an open door and a cyan cartridge.
+Secrets Manager resources appear as a ruby glass vault with an open door and a cyan cartridge. The SES sender identity appears as an engraved glass certificate with a plum envelope and ribbon.
 
 After choosing an interface, enter the local vault passphrase. The wizard
 collects settings and displays them for review before AWS or GitHub sign-in.
