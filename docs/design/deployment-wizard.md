@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/c1a99474cecd5c6e05914650e8c8d6986f79361a/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/bb3341571477e1031fe498d3fd6b17addd781228/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
