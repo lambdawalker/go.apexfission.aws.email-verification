@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/23f7987f1e395549b45edd03f2e8877a5cd56eb0/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/6ec03fc947b1009738c6fb8b7faf720c7ac2686b/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -24,8 +24,10 @@ wizard. To open the web interface directly, run `./deploy.sh --server` or
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
 for the Android demo endpoint appears as an engraved glass plaque with a sapphire-blue frame, TLS letters and ribbon.
 Choose **TLS shield** in the Topology toolbar to switch to the ruby shield.
-The API Gateway uses a forward-facing violet aperture. The custom domain (`testhost.app-demo-domain`) appears as a hanging amethyst sign engraved with `www`. Its API mapping (`testhost.app-demo-mapping`) uses a level three-port glass valve with a teal L-shaped passage. The `start`, `confirm`, and `status` routes use violet glass sextants with graphite nickel telescopes and index arms matching the domain sign. Their shared Lambda integration, `testhost.app-demo-invoke`, uses a rounded violet glass clevis and orange glass tongue joined by a silver pin.
+The API Gateway uses a forward-facing violet aperture. The custom domain (`testhost.app-demo-domain`) appears as a hanging amethyst sign engraved with `www`. Its API mapping (`testhost.app-demo-mapping`) uses a level three-port glass valve with a teal L-shaped passage. The `start`, `confirm`, and `status` routes use violet glass sextants with graphite nickel telescopes and index arms matching the domain sign. Their shared Lambda integration, `testhost.app-demo-invoke`, uses a rounded violet glass clevis and orange glass tongue joined by a graphite nickel pin.
 The default API stage uses a three-arm signpost with engraved dev, qa and prod signs. The Cognito Android app client uses an indigo plaque with a person silhouette and a gear. The EventBridge worker rule uses the forked bridge, and its target uses the raspberry mail slot with an amber envelope.
+
+Both RandomBytes resources (`testhost.app-hmac` and `testhost.app-encryption`) use a tipped teal cup with three amber dice, including one inside the cup.
 
 The Secrets Manager secret (`testhost.app-secrets`) appears as a ruby glass vault with an open door and a cyan cartridge. Its secret version (`testhost.app-secret-values`) appears as a scratched glass manuscript with translucent garnet edges, a woven teal tie and a ruby wax seal. The SES sender identity appears as an engraved glass certificate with a plum frame, envelope and ribbon. Each Lambda invocation permission uses the same engraved plaque with a mandarin-orange frame, λ and ribbon. The function itself uses the standalone orange λ.
 
@@ -33,7 +35,7 @@ The IAM execution role has a ruby person silhouette, ACM certificate validation 
 
 Selecting an artifact traces its visible silhouette in pale blue. Slender amber-tinted glass conduits point from each parent toward its child. Each arrowhead floats just outside the child model.
 
-The glass bodies use the tinted finish of the certificate plaques. You can see other icons through overlapping glass. Details such as hinges and envelope folds stay opaque.
+The glass bodies use the tinted finish of the certificate plaques. You can see other icons through overlapping glass. Metal hardware uses the domain sign’s satin graphite nickel finish. The CloudWatch ticker has recessed marks in darker ivory glass. The Cloudflare DNS and Route 53 signposts use taller nickel arrows and violet glass badges.
 
 In the topology viewport, drag to orbit, drag with the middle mouse button to pan, and scroll to zoom. Press **Ctrl+B** and drag a rectangle to frame that area, or press **Esc** to cancel. The upper-right controls include six axis views, pan, zoom, and box zoom. Click the **Home** icon or press **Home** in the viewport to restore the opening angle, center, and zoom. **Fit view** frames the visible artifacts at the current angle.
 
