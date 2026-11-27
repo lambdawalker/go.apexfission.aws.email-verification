@@ -61,7 +61,7 @@ implemented. These choices are explicit and configurable for review.
 
 - Durable scheduler/discovery indexes, lease/fencing behavior under real AWS
   latency, reconciliation and recovery tooling, and production deletion/TTL jobs.
-- SES adapter/template integration, resend invalidation/cooldowns, ingress rate
+- Resend invalidation/cooldowns, ingress rate
   limiting, and securely provisioned encryption/HMAC keys with rotation policy.
 - Authoritative S3/HTTPS trust retrieval, cache refresh/cooldown behavior and
   publication validation. The Trust interface must not be backed by untrusted
@@ -73,7 +73,9 @@ implemented. These choices are explicit and configurable for review.
   account provisioning implementation.
 - Remaining infrastructure provisioning, IAM least privilege, monitoring/alerts
   and live AWS tests. Composer integration now provisions verifier storage/signing,
-  but does not provision the complete production service. Preflight provides a gate but
+  and the optional public AWS runtime now provisions secrets, sender identity and a
+  separately permissioned worker. Full production scheduling/trust lifecycle work
+  remains outstanding. Preflight provides a gate but
   does not automatically instrument deployment commands outside this repository.
 - Additional independent cryptographic interoperability and adversarial review.
 
@@ -101,12 +103,21 @@ flowchart TD
 
 [Composer integration](design/composer-integration.md) adds a versioned feature
 contract, validated configuration inventory, isolated Pulumi module, ownership
-labels and native composition tests. Host storage and runtime remain parent-owned.
+labels and native composition tests. Host storage and API runtime remain
+parent-owned; the optional reusable component supplies the worker runtime.
 
 ## Isolated test host
 
 [Test-host implementation](design/test-host.md) now wires SES, a resumable scan
 worker, pinned KMS trust and durable acceptance into a separate deployable test
-stack. This is a low-volume operator harness, not the production scheduler,
+stack, now through the public AWS runtime and a separate worker Lambda.
+This is a low-volume operator harness, not the production scheduler,
 archive/revocation protocol or user-facing application. No live AWS run was
 performed. Host progress has a read-only backend API for IAM-authenticated callers.
+
+## Reusable runtime extraction
+
+The demo now consumes public AWS adapters, the `worker` package and
+`infrastructure.NewRuntime`. API and worker run as separate Lambdas. The API
+role has no SES, KMS or scan grants. Existing managed secret/key material is
+adopted through aliases. See [integration and migration](design/reusable-feature.md).

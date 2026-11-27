@@ -11,7 +11,20 @@
   "BucketPrefix": "testhost-state",
   "BuildPackage": "./cmd/testhost",
   "BuildDir": "dist/testhost",
-  "Outputs": ["testHostFunction", "testHostFunctionArn", "testHostTable", "testHostLogs", "senderVerificationRequired", "testHostMobileURL", "testHostMobileUserPoolID", "testHostMobileClientID", "testHostMobileIssuer"],
+  "Outputs": [
+    "testHostFunction",
+    "testHostFunctionArn",
+    "testHostTable",
+    "testHostLogs",
+    "senderVerificationRequired",
+    "testHostMobileURL",
+    "testHostMobileUserPoolID",
+    "testHostMobileClientID",
+    "testHostMobileIssuer",
+    "testHostWorkerFunction",
+    "testHostWorkerFunctionArn",
+    "testHostWorkerLogs"
+  ],
   "ArtifactFeaturePrefixes": {
     "verification.": "email-verification"
   },
@@ -23,7 +36,7 @@
     "testhost-app-demo-permission-confirm": "testhost-app-lambda",
     "testhost-app-demo-permission-start": "testhost-app-lambda",
     "testhost-app-demo-permission-status": "testhost-app-lambda",
-    "testhost-app-worker-permission": "testhost-app-lambda",
+    "verification-runtime-worker-permission": "verification-runtime-worker-lambda",
     "testhost.app-demo-android": "testhost.app-demo-users",
     "testhost.app-demo-auth": "testhost.app-demo-api",
     "testhost.app-demo-confirm": "testhost.app-demo-api",
@@ -34,8 +47,12 @@
     "testhost.app-demo-start": "testhost.app-demo-api",
     "testhost.app-demo-status": "testhost.app-demo-api",
     "testhost.app-permissions": "testhost.app-role",
-    "testhost.app-secret-values": "testhost.app-secrets",
-    "testhost.app-worker-target": "testhost.app-worker"
+    "verification.runtime-secret-values": "verification.runtime-secrets",
+    "verification.runtime-worker-target": "verification.runtime-worker",
+    "testhost.app-verification-access": "testhost.app-role",
+    "verification.runtime-worker-access": "verification.runtime-worker-role",
+    "verification.runtime-worker-logging": "verification.runtime-worker-role",
+    "verification.runtime-host-acceptance": "verification.runtime-worker-role"
   },
   "ArtifactIconVariants": {
     "testhost.app-demo-auth": "jwt"
@@ -46,18 +63,18 @@
     "verification.backend-signing": "Signs verification results with an asymmetric KMS key so the host can trust each outcome.",
     "testhost.app": "Isolated demo host that starts, confirms, and inspects email verification transactions.",
     "testhost.app-records": "Stores test host requests and their state while the demo verification flow runs.",
-    "testhost.app-hmac": "Generates the key used to hash verification codes without storing plaintext codes.",
-    "testhost.app-encryption": "Generates the key used to protect verification proofs while they await delivery.",
-    "testhost.app-secrets": "Keeps the test host HMAC and encryption keys in AWS Secrets Manager.",
-    "testhost.app-secret-values": "Stores the generated HMAC and encryption key values in the protected secret.",
-    "testhost.app-sender": "Registers the From address used to send verification codes through Amazon SES.",
+    "verification.runtime-hmac": "Generates the key used to hash verification codes without storing plaintext codes.",
+    "verification.runtime-encryption": "Generates the key used to protect verification proofs while they await delivery.",
+    "verification.runtime-secrets": "Keeps the test host HMAC and encryption keys in AWS Secrets Manager.",
+    "verification.runtime-secret-values": "Stores the generated HMAC and encryption key values in the protected secret.",
+    "verification.runtime-sender": "Registers the From address used to send verification codes through Amazon SES.",
     "testhost.app-role": "Gives the test host Lambda a dedicated execution identity.",
     "testhost.app-logs": "Collects test host Lambda logs with a seven-day retention period.",
-    "testhost.app-permissions": "Limits the Lambda to its tables, signing key, secret, logs, and the selected SES sender and recipient.",
-    "testhost-app-lambda": "Runs the demo API and scheduled verification worker in one test host Lambda.",
-    "testhost.app-worker": "Runs the periodic scan that sends mail, signs outcomes, delivers results, and clears expired proofs.",
-    "testhost-app-worker-permission": "Allows the scheduled EventBridge rule to invoke the test host Lambda.",
-    "testhost.app-worker-target": "Connects the periodic EventBridge rule to the test host Lambda with a tick event.",
+    "testhost.app-permissions": "Grants the API access to host records and its log group.",
+    "testhost-app-lambda": "Handles authenticated start, confirm and status requests using the reusable verification library.",
+    "verification.runtime-worker": "Runs the periodic scan that sends mail, signs outcomes, delivers results, and clears expired proofs.",
+    "verification-runtime-worker-permission": "Allows the scheduled EventBridge rule to invoke the test host Lambda.",
+    "verification.runtime-worker-target": "Connects the periodic EventBridge rule to the test host Lambda with a tick event.",
     "testhost.app-demo-users": "Holds isolated demo users for mobile API authentication.",
     "testhost.app-demo-android": "Provides a public Cognito app client for the Android demo.",
     "testhost.app-demo-api": "Exposes the email verification demo endpoints through an HTTP API.",
@@ -75,7 +92,15 @@
     "testhost.app-demo-domain-validated": "Waits for DNS validation before the mobile API certificate is used.",
     "testhost.app-demo-domain": "Assigns the environment-specific HTTPS hostname to API Gateway.",
     "testhost.app-demo-mapping": "Maps the mobile hostname to the demo API's default stage.",
-    "testhost.app-demo-hostname": "Points the public mobile API hostname to its API Gateway endpoint."
+    "testhost.app-demo-hostname": "Points the public mobile API hostname to its API Gateway endpoint.",
+    "testhost.app-verification-access": "Grants API access to verification records and proof secrets, without SES or KMS signing permissions.",
+    "verification.runtime": "Reusable email delivery, proof secrets, and background verification runtime.",
+    "verification-runtime-worker-lambda": "Runs durable email, signing, acceptance and cleanup work through the public worker.",
+    "verification.runtime-worker-role": "Dedicated execution identity for verification background work.",
+    "verification.runtime-worker-logs": "Collects background verification logs with a fourteen-day retention period.",
+    "verification.runtime-worker-access": "Scopes worker access to the verifier table, signing key, secret and sender identity.",
+    "verification.runtime-worker-logging": "Allows the worker to write only to its own log group.",
+    "verification.runtime-host-acceptance": "Host-supplied permissions required to durably accept verification results."
   },
   "InputsFile": "testhost.json",
   "DiscoveryStack": {
@@ -85,13 +110,23 @@
   },
   "Functions": {
     "defaultSenderAddress": {
-      "Parameters": {"Address": "text", "Environment": "domain", "Domain": "domain"},
+      "Parameters": {
+        "Address": "text",
+        "Environment": "domain",
+        "Domain": "domain"
+      },
       "Result": "email",
       "Template": "{{if contains .Address \"@\"}}{{.Address}}{{else}}{{.Address}}@{{.Environment}}.components.email-verification.{{lower .Domain}}{{end}}"
     }
   },
   "Inputs": [
-    {"Name": "Domain", "Label": "Ownership domain", "Help": "Enter the base domain, such as apexfission.com. The wizard adds the environment and service labels.", "Kind": "domain", "GitHubVariable": "BENCH_DOMAIN"},
+    {
+      "Name": "Domain",
+      "Label": "Ownership domain",
+      "Help": "Enter the base domain, such as apexfission.com. The wizard adds the environment and service labels.",
+      "Kind": "domain",
+      "GitHubVariable": "BENCH_DOMAIN"
+    },
     {
       "Name": "Sender",
       "Label": "SES From address",
@@ -103,14 +138,33 @@
         "DefaultInput": "verify",
         "UseLegacyValueAsInput": true,
         "Parameters": {
-          "Address": {"Source": "userInput"},
-          "Environment": {"Source": "environment"},
-          "Domain": {"Source": "field", "Name": "Domain"}
+          "Address": {
+            "Source": "userInput"
+          },
+          "Environment": {
+            "Source": "environment"
+          },
+          "Domain": {
+            "Source": "field",
+            "Name": "Domain"
+          }
         }
       }
     },
-    {"Name": "Recipient", "Label": "Test recipient", "Help": "Enter the full address that receives the code. In the SES sandbox, verify this address in the deployment region.", "Kind": "email", "GitHubVariable": "BENCH_RECIPIENT"},
-    {"Name": "DNSProvider", "Label": "Public DNS provider", "Help": "Choose the provider serving the sender domain. The mobile API uses this provider by default.", "Kind": "dnsProvider", "GitHubVariable": "BENCH_DNS_PROVIDER"}
+    {
+      "Name": "Recipient",
+      "Label": "Test recipient",
+      "Help": "Enter the full address that receives the code. In the SES sandbox, verify this address in the deployment region.",
+      "Kind": "email",
+      "GitHubVariable": "BENCH_RECIPIENT"
+    },
+    {
+      "Name": "DNSProvider",
+      "Label": "Public DNS provider",
+      "Help": "Choose the provider serving the sender domain. The mobile API uses this provider by default.",
+      "Kind": "dnsProvider",
+      "GitHubVariable": "BENCH_DNS_PROVIDER"
+    }
   ],
   "ConfigDefaults": {
     "policyJSON": "{}"
@@ -124,5 +178,8 @@
     "ProbePath": "/v1/verification/status",
     "ProbeStatus": 401
   },
-  "GitHub": {"Workflow": "testhost-deploy.yml", "EnvironmentPrefix": "testhost-"}
+  "GitHub": {
+    "Workflow": "testhost-deploy.yml",
+    "EnvironmentPrefix": "testhost-"
+  }
 }

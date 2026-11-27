@@ -28,22 +28,14 @@ type Output struct {
 	Accepted  bool   `json:"accepted"`
 	Code      string `json:"error,omitempty"`
 }
-type Scanner interface {
-	Scan(context.Context, string) ([]v.Transaction, string, error)
-}
-type TrustLoader func(context.Context) (v.Trust, error)
 type App struct {
-	Host                      *v.Host
-	Service                   *v.Service
-	Store                     storage.Store
-	Protector                 v.Protector
-	Mailer                    v.Mailer
-	Signer                    v.Signer
-	Trust                     TrustLoader
-	Scanner                   Scanner
-	Policy                    config.Config
-	HostID, Issuer, Recipient string
-	Now                       func() time.Time
+	Host              *v.Host
+	Service           *v.Service
+	Store             storage.Store
+	Protector         v.Protector
+	Policy            config.Config
+	HostID, Recipient string
+	Now               func() time.Time
 }
 
 func validID(s string) bool {
@@ -72,13 +64,6 @@ func errorCode(e error) string {
 // Handle processes an operator request or a request from the authenticated mobile adapter. It never
 // returns transaction internals, email proofs, assertions, or provider errors.
 func (a *App) Handle(ctx context.Context, in Input) (Output, error) {
-	if in.Action == "tick" {
-		err := a.Tick(ctx)
-		if err != nil {
-			return Output{}, errors.New("test worker failed")
-		}
-		return Output{State: "worker_complete"}, nil
-	}
 	if !validID(in.Operation) {
 		return Output{Code: "invalid"}, nil
 	}
@@ -220,79 +205,4 @@ func (a *App) status(ctx context.Context, op string) (Output, error) {
 		state = "unresolved_delivery"
 	}
 	return Output{Operation: op, State: state, Accepted: progress.Accepted}, nil
-}
-
-// Step attempts at most one external phase. Library CAS and persisted retry
-// deadlines arbitrate competing workers; duplicate email remains possible.
-func (a *App) Step(ctx context.Context, tx v.Transaction) error {
-	if tx.Request.Host != a.HostID {
-		return v.ErrInvalid
-	}
-	switch tx.State {
-	case "pending":
-		if !a.Now().Before(tx.ProofDeadline) || tx.ProofAttempts >= tx.Policy.ProofAttempts {
-			return a.Service.PurgeEmailSecrets(ctx, a.HostID, tx.Request.Operation)
-		}
-		if !tx.MailSent {
-			return a.Service.SendMail(ctx, a.HostID, tx.Request.Operation, a.Protector, a.Mailer)
-		}
-	case "confirmed":
-		_, e := a.Service.Issue(ctx, a.HostID, tx.Request.Operation, a.Issuer, a.Signer)
-		return e
-	case "ready":
-		if e := a.Host.BindTransaction(ctx, a.HostID, tx.Request.Operation, tx.ID); e != nil {
-			return e
-		}
-		trust, e := a.Trust(ctx)
-		if e != nil {
-			return e
-		}
-		return a.Service.Deliver(ctx, a.HostID, tx.Request.Operation, a.Issuer, a.Host, trust)
-	}
-	return nil
-}
-
-// Tick advances a durable scan cursor, so old terminal rows cannot starve newer
-// work. Scans are intentionally limited to the isolated low-volume test stack.
-func (a *App) Tick(ctx context.Context) error {
-	var transient error
-	for page := 0; page < 20; page++ {
-		row, e := a.Store.Load(ctx, "test-worker-cursor")
-		var cursor string
-		if e != nil && !errors.Is(e, storage.ErrMissing) {
-			return e
-		}
-		if e == nil {
-			if e = json.Unmarshal(row.Data, &cursor); e != nil {
-				return e
-			}
-		}
-		rows, next, e := a.Scanner.Scan(ctx, cursor)
-		if e != nil {
-			return e
-		}
-		for _, tx := range rows {
-			// Leave enough time for trust refresh plus one bounded external phase.
-			// An unfinished page is retried; library state makes completed work safe.
-			if deadline, ok := ctx.Deadline(); ok && time.Until(deadline) < time.Duration(2*a.Policy.TimeoutSeconds+5)*time.Second {
-				return transient
-			}
-			e = a.Step(ctx, tx)
-			if e != nil && !errors.Is(e, v.ErrState) && !errors.Is(e, v.ErrExpired) && !errors.Is(e, v.ErrAttempts) && !errors.Is(e, storage.ErrConflict) {
-				transient = errors.Join(transient, e)
-			}
-		}
-		raw, _ := json.Marshal(next)
-		e = a.Store.CompareAndSwap(ctx, "test-worker-cursor", row.Version, raw)
-		if errors.Is(e, storage.ErrConflict) {
-			return transient
-		}
-		if e != nil {
-			return e
-		}
-		if next == "" {
-			return transient
-		}
-	}
-	return transient
 }
