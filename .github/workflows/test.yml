@@ -18,6 +18,8 @@ jobs:
 
       - run: go run ./examples/composed
       - run: bash scripts/testhost-import-test.sh
+      - run: go test -race ./...
+        working-directory: tools/deploy
       - run: ./deploy.sh --action build
       - run: python3 scripts/testhost-client.py --help
   infrastructure:

@@ -27,7 +27,11 @@ func main() {
 		if err != nil {
 			return err
 		}
-		_, err = infrastructure.Deploy(ctx, plan, ownership.Metadata{Application: ctx.Project(), Environment: ctx.Stack(), Domain: settings.Require("domain"), Feature: "verification", Deployment: ctx.Project() + "-" + ctx.Stack(), Owner: "email-verification"}, nil)
+		group, err := infrastructure.NewFeatureGroup(ctx, "email-verification")
+		if err != nil {
+			return err
+		}
+		_, err = infrastructure.Deploy(ctx, plan, ownership.Metadata{Application: ctx.Project(), Environment: ctx.Stack(), Domain: settings.Require("domain"), Feature: "verification", Deployment: ctx.Project() + "-" + ctx.Stack(), Owner: "email-verification"}, nil, group.ChildOptions()...)
 		return err
 	})
 }

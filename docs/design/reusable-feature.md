@@ -17,6 +17,26 @@ import public packages; they do not copy `internal/testhost` or its Pulumi facto
 contract. Existing storage-only consumers are unchanged. `NewRuntime` is an
 additive native Pulumi component, used with the resolved contract outputs.
 
+## Feature hierarchy in previews and reports
+
+`infrastructure.NewFeatureGroup` creates a logical ancestor for all parts of one
+feature module. The demo's `email-verification` ancestor contains
+`verification.backend` and `verification.runtime`; `testhost.app` remains a sibling.
+The deployment-state bucket stays outside the feature. This ancestor is a Pulumi
+component, not another AWS service or independently deployed application.
+
+Pass `group.ChildOptions()` to `infrastructure.Deploy` and
+`group.ChildOptions(otherOptions...)` to `NewRuntime`. These options also alias
+previously root-level components. Pulumi propagates parent aliases to their
+children, preserving existing resource identities; the older secret/key migration
+aliases remain in place. Keep component names unchanged and inspect the saved
+preview for replacements before applying to an existing stack.
+
+The tree, topology and self-contained report use these native parent relationships.
+A fresh preview shows the new hierarchy; previously saved reports remain snapshots
+of the earlier hierarchy. No Composer upgrade or resource recreation is required
+solely to introduce this group.
+
 ## Runtime integration
 
 The API creates its own `verification.Host` with application-owned storage. Load

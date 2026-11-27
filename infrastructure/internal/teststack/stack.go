@@ -102,10 +102,14 @@ func Deploy(ctx *pulumi.Context, s Settings) error {
 	if _, e = feature.Configuration(ctx.Stack(), "testhost", "testhost-role", "deployment-role", s.Policy); e != nil {
 		return e
 	}
-	_, e = infra.Deploy(ctx, plan, ownership.Metadata{Application: ctx.Project(), Environment: ctx.Stack(), Domain: s.Domain, Feature: "verification", Deployment: ctx.Project() + "-" + ctx.Stack(), Owner: "email-verification-testhost"}, adapter.Registry{kind: factory(s, mobileHost)})
+	group, e := infra.NewFeatureGroup(ctx, "email-verification")
+	if e != nil {
+		return e
+	}
+	_, e = infra.Deploy(ctx, plan, ownership.Metadata{Application: ctx.Project(), Environment: ctx.Stack(), Domain: s.Domain, Feature: "verification", Deployment: ctx.Project() + "-" + ctx.Stack(), Owner: "email-verification-testhost"}, adapter.Registry{kind: factory(s, mobileHost, group)}, group.ChildOptions()...)
 	return e
 }
-func factory(s Settings, mobileHost string) adapter.Factory {
+func factory(s Settings, mobileHost string, group *infra.FeatureGroup) adapter.Factory {
 	return func(ctx *pulumi.Context, name string, in pulumi.Map, opts ...pulumi.ResourceOption) (adapter.Registered, error) {
 		// Pulumi uses the logical name as the base of the AWS function name.
 		// Lambda disallows the dot in Composer's qualified resource name.
@@ -150,7 +154,7 @@ func factory(s Settings, mobileHost string) adapter.Factory {
 			Policy:  s.Policy, Sender: s.Sender, AllowedRecipients: []string{s.Recipient}, WorkerCode: pulumi.NewFileArchive(s.Archive), HostPolicy: hostPolicy,
 			WorkerEnvironment: pulumi.StringMap{"HOST_TABLE": table.Name, "HOST_ID": pulumi.String(ctx.Project() + "-" + ctx.Stack()), "RECIPIENT": pulumi.String(s.Recipient), "VERIFICATION_MODE": pulumi.String("worker")},
 			Migration:         &infra.Migration{Parent: component, Prefix: name},
-		}, awslabels.Option(verificationScope))
+		}, group.ChildOptions(awslabels.Option(verificationScope))...)
 		if e != nil {
 			return adapter.Registered{}, e
 		}
