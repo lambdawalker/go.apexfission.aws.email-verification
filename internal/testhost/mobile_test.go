@@ -97,12 +97,12 @@ func TestMobileVerificationAgainstTestHost(t *testing.T) {
 	if out := call("start", start); out.Operation != op || out.State != "pending" {
 		t.Fatal(out)
 	}
-	if err := f.app.Step(t.Context(), f.tx(t)); err != nil {
+	if err := f.worker.Step(t.Context(), f.tx(t)); err != nil {
 		t.Fatal(err)
 	}
 	call("confirm", map[string]any{"secret": f.secret, "code": f.mail.proof.Code})
 	for i := 0; i < 2; i++ {
-		if err := f.app.Step(t.Context(), f.tx(t)); err != nil {
+		if err := f.worker.Step(t.Context(), f.tx(t)); err != nil {
 			t.Fatal(err)
 		}
 	}

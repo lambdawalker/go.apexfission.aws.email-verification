@@ -13,6 +13,7 @@ import (
 	v "github.com/lambdawalker/go.apexfission.aws.email-verification"
 	"github.com/lambdawalker/go.apexfission.aws.email-verification/config"
 	"github.com/lambdawalker/go.apexfission.aws.email-verification/storage"
+	"github.com/lambdawalker/go.apexfission.aws.email-verification/worker"
 )
 
 type mailbox struct {
@@ -28,6 +29,8 @@ func (m *mailbox) Send(_ context.Context, _ string, p v.Proofs) error {
 
 type fixture struct {
 	app            *App
+	worker         *worker.Worker
+	source         worker.Source
 	mail           *mailbox
 	host, verifier *storage.Memory
 	secret         string
@@ -59,9 +62,16 @@ func (f *fixture) restart(t *testing.T) {
 		t.Fatal(e)
 	}
 	protector, _ := v.NewAESProtector([]byte(strings.Repeat("e", 32)))
-	f.app = &App{Host: host, Service: svc, Store: f.host, Protector: protector, Mailer: f.mail, Signer: v.LocalSigner{ID: "test-key", Key: f.key}, Policy: policy, HostID: "test", Issuer: "test-issuer", Recipient: f.input.Email, Now: clock}
-	f.app.Trust = func(context.Context) (v.Trust, error) {
+	f.app = &App{Host: host, Service: svc, Store: f.host, Protector: protector, Policy: policy, HostID: "test", Recipient: f.input.Email, Now: clock}
+	trust := func(context.Context) (v.Trust, error) {
 		return pinnedTrust{"test-issuer", "test-key", v.KeyTrust{Public: &f.key.PublicKey, State: "active", SigningFrom: f.now.Add(-time.Hour), SigningUntil: f.now.Add(time.Hour), AcceptUntil: f.now.Add(time.Hour), CheckedAt: f.now}}, nil
+	}
+	if f.source == nil {
+		f.source = &pages{}
+	}
+	f.worker, e = worker.New(worker.Settings{Service: svc, Protector: protector, Mailer: f.mail, Signer: v.LocalSigner{ID: "test-key", Key: f.key}, Deliver: worker.InProcess(svc, host, "test-issuer", trust), Source: f.source, CursorStore: f.verifier, HostID: "test", Issuer: "test-issuer", Policy: policy, Now: clock})
+	if e != nil {
+		t.Fatal(e)
 	}
 }
 func (f *fixture) tx(t *testing.T) v.Transaction {
@@ -89,7 +99,7 @@ func TestEndToEndAcrossRestarts(t *testing.T) {
 	if again.Code != "" || f.tx(t).ID != first.ID {
 		t.Fatal("retry recreated transaction")
 	}
-	if e = f.app.Step(ctx, f.tx(t)); e != nil {
+	if e = f.worker.Step(ctx, f.tx(t)); e != nil {
 		t.Fatal(e)
 	}
 	if f.mail.calls != 1 || len(f.mail.proof.Code) != 6 {
@@ -104,18 +114,18 @@ func TestEndToEndAcrossRestarts(t *testing.T) {
 	if confirmed.Code != "" {
 		t.Fatal(confirmed)
 	}
-	if e = f.app.Step(ctx, f.tx(t)); e != nil {
+	if e = f.worker.Step(ctx, f.tx(t)); e != nil {
 		t.Fatal(e)
 	}
 	f.restart(t)
-	if e = f.app.Step(ctx, f.tx(t)); e != nil {
+	if e = f.worker.Step(ctx, f.tx(t)); e != nil {
 		t.Fatal(e)
 	}
 	status, _ := f.app.Handle(ctx, Input{Action: "status", Operation: f.input.Operation})
 	if !status.Accepted || status.State != "acknowledged" {
 		t.Fatal(status)
 	}
-	if e = f.app.Step(ctx, f.tx(t)); e != nil {
+	if e = f.worker.Step(ctx, f.tx(t)); e != nil {
 		t.Fatal(e)
 	}
 	if f.mail.calls != 1 {
@@ -159,13 +169,15 @@ func (p *pages) Scan(_ context.Context, c string) ([]v.Transaction, string, erro
 func TestWorkerCursorSurvivesRestart(t *testing.T) {
 	f := newFixture(t)
 	p := &pages{}
-	f.app.Scanner = p
-	if e := f.app.Tick(context.Background()); e != nil {
+	f.source = p
+	f.restart(t)
+	if e := f.worker.Tick(context.Background()); e != nil {
 		t.Fatal(e)
 	}
 	f.restart(t)
-	f.app.Scanner = p
-	if e := f.app.Tick(context.Background()); e != nil {
+	f.source = p
+	f.restart(t)
+	if e := f.worker.Tick(context.Background()); e != nil {
 		t.Fatal(e)
 	}
 	if len(p.cursors) != 40 || p.cursors[20] != "next-page" {
@@ -181,7 +193,7 @@ func TestRecipientAndClientProofRequired(t *testing.T) {
 		t.Fatal(out)
 	}
 	f.app.Handle(context.Background(), f.input)
-	f.app.Step(context.Background(), f.tx(t))
+	f.worker.Step(context.Background(), f.tx(t))
 	out, _ = f.app.Handle(context.Background(), Input{Action: "confirm", Operation: in.Operation, Code: f.mail.proof.Code})
 	if out.Code != "invalid" {
 		t.Fatal("code alone confirmed")
@@ -204,5 +216,58 @@ func TestMissingHostOperationIsNeverRecreated(t *testing.T) {
 	}
 	if _, e := f.app.Host.ProgressForHost(ctx, f.app.HostID, f.input.Operation); e != storage.ErrMissing {
 		t.Fatal("host operation was recreated")
+	}
+}
+
+type pinnedTrust struct {
+	issuer, id string
+	key        v.KeyTrust
+}
+
+func (p pinnedTrust) Resolve(_ context.Context, issuer, id string) (v.KeyTrust, error) {
+	if issuer != p.issuer || id != p.id {
+		return v.KeyTrust{}, v.ErrInvalid
+	}
+	return p.key, nil
+}
+func TestAPIRejectsWorkerInvocations(t *testing.T) {
+	f := newFixture(t)
+	out, err := f.app.Handle(context.Background(), Input{Action: "tick"})
+	if err != nil || out.Code != "invalid" {
+		t.Fatalf("API accepted worker event: %+v %v", out, err)
+	}
+}
+
+func TestWorkerFailureDoesNotAcknowledgeEvidence(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	f.app.Handle(ctx, f.input)
+	f.worker.Step(ctx, f.tx(t))
+	f.app.Handle(ctx, Input{Action: "confirm", Operation: f.input.Operation, Secret: f.secret, Code: f.mail.proof.Code})
+	f.worker.Step(ctx, f.tx(t))
+	// Simulate the application denying this operation before worker acceptance.
+	if err := f.app.Host.Block(ctx, f.app.HostID, f.input.Operation); err != nil {
+		t.Fatal(err)
+	}
+	if err := f.worker.Step(ctx, f.tx(t)); err == nil {
+		t.Fatal("blocked operation accepted")
+	}
+	if tx := f.tx(t); tx.State != "ready" || tx.Assertion == "" {
+		t.Fatal("lost pending evidence after failed acceptance")
+	}
+}
+func TestWorkerRejectsAPIEventsAndCrossHostWork(t *testing.T) {
+	f := newFixture(t)
+	ctx := context.Background()
+	for _, raw := range []string{`{"action":"start"}`, `{"action":"tick","operation":"client-input"}`, `{"version":"2.0","body":"{}"}`} {
+		if _, err := f.worker.Handle(ctx, json.RawMessage(raw)); err == nil {
+			t.Fatal("worker accepted API event")
+		}
+	}
+	f.app.Handle(ctx, f.input)
+	tx := f.tx(t)
+	tx.Request.Host = "another-host"
+	if err := f.worker.Step(ctx, tx); err != v.ErrInvalid || f.mail.calls != 0 {
+		t.Fatal("worker crossed host boundary")
 	}
 }

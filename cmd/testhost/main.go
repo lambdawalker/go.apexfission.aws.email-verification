@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"os"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -12,6 +13,19 @@ import (
 )
 
 func main() {
+	// One reproducible ZIP serves two independently permissioned functions.
+	// Deployment fixes the mode; event contents cannot select worker privileges.
+	if os.Getenv("VERIFICATION_MODE") == "worker" {
+		lambda.Start(func(ctx context.Context, raw json.RawMessage) (map[string]string, error) {
+			w, err := testhost.WorkerFromEnvironment(ctx)
+			if err != nil {
+				return nil, errors.New("worker initialization failed")
+			}
+			return w.Handle(ctx, raw)
+		})
+		return
+	}
+
 	lambda.Start(func(ctx context.Context, raw json.RawMessage) (any, error) {
 		var envelope struct {
 			Version string `json:"version"`

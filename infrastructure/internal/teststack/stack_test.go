@@ -125,7 +125,7 @@ func TestIsolatedStackWiring(t *testing.T) {
 			identities++
 		case "aws:lambda/function:Function":
 			functions++
-			if r.Name != "testhost-app-lambda" {
+			if r.Name != "testhost-app-lambda" && r.Name != "verification-runtime-worker-lambda" {
 				t.Fatalf("Lambda logical name must produce a valid AWS function name, got %q", r.Name)
 			}
 			foundAlias := false
@@ -134,18 +134,27 @@ func TestIsolatedStackWiring(t *testing.T) {
 					foundAlias = true
 				}
 			}
-			if !foundAlias {
+			if r.Name == "testhost-app-lambda" && !foundAlias {
 				t.Fatal("Lambda registration must retain the former dotted name as an alias")
 			}
 			vars := r.Inputs["environment"].ObjectValue()["variables"].ObjectValue()
 			if vars["HOST_TABLE"].StringValue() == vars["VERIFIER_TABLE"].StringValue() {
 				t.Fatal("shared records")
 			}
-			if vars["KEY_ARN"].StringValue() != "arn:aws:mock::123:verification.backend-signing" {
-				t.Fatal("wrong signing key binding")
+			mode := vars["VERIFICATION_MODE"].StringValue()
+			if mode == "worker" {
+				if vars["KEY_ARN"].StringValue() != "arn:aws:mock::123:verification.backend-signing" || vars["SENDER"].StringValue() != s.Sender {
+					t.Fatal("wrong worker bindings")
+				}
+			} else if mode == "api" {
+				if _, ok := vars["KEY_ARN"]; ok {
+					t.Fatal("API received signer configuration")
+				}
+			} else {
+				t.Fatal("missing explicit Lambda mode")
 			}
-			if vars["SENDER"].StringValue() != s.Sender || vars["RECIPIENT"].StringValue() != s.Recipient {
-				t.Fatal("wrong mail binding")
+			if vars["RECIPIENT"].StringValue() != s.Recipient {
+				t.Fatal("wrong recipient")
 			}
 			for name := range vars {
 				if strings.Contains(strings.ToLower(string(name)), "hmac") || strings.Contains(strings.ToLower(string(name)), "encryption") {
@@ -154,10 +163,12 @@ func TestIsolatedStackWiring(t *testing.T) {
 			}
 		case "aws:lambda/permission:Permission":
 			permissions++
-			assertLambdaPermission(t, r, "testhost-app-worker-permission", "events.amazonaws.com", "arn:aws:mock::123:testhost.app-worker")
+			if r.Name != "verification-runtime-worker-permission" || r.Inputs["function"].StringValue() != "verification-runtime-worker-lambda" || r.Inputs["sourceArn"].StringValue() != "arn:aws:mock::123:verification.runtime-worker" {
+				t.Fatal("schedule not restricted to the worker")
+			}
 		case "aws:cloudwatch/eventTarget:EventTarget":
 			schedules++
-			if r.Inputs["input"].StringValue() != `{"action":"tick"}` {
+			if r.Inputs["input"].StringValue() != `{"action":"tick"}` || r.Inputs["arn"].StringValue() != "arn:aws:mock::123:verification-runtime-worker-lambda" {
 				t.Fatal("wrong worker event")
 			}
 		case "aws:iam/rolePolicy:RolePolicy":
@@ -178,6 +189,10 @@ func TestIsolatedStackWiring(t *testing.T) {
 					}
 				}
 				for _, action := range stmt.Action {
+					if strings.HasPrefix(r.Name, "testhost.") && (strings.HasPrefix(action, "kms:") || strings.HasPrefix(action, "ses:") || action == "dynamodb:Scan") {
+						t.Fatal("API role contains worker privileges")
+					}
+
 					if action == "ses:SendEmail" && len(stmt.Condition) == 0 {
 						t.Fatal("unrestricted recipient")
 					}
@@ -187,7 +202,7 @@ func TestIsolatedStackWiring(t *testing.T) {
 			t.Fatal("public test endpoint")
 		}
 	}
-	if tables != 2 || functions != 1 || schedules != 1 || signers != 1 || secrets != 1 || identities != 1 || permissions != 1 {
+	if tables != 2 || functions != 2 || schedules != 1 || signers != 1 || secrets != 1 || identities != 1 || permissions != 1 {
 		t.Fatalf("unexpected isolated resources: %d %d %d %d %d %d %d", tables, functions, schedules, signers, secrets, identities, permissions)
 	}
 }
@@ -226,4 +241,43 @@ func assertLambdaPermission(t *testing.T, r pulumi.MockResourceArgs, name, princ
 		}
 	}
 	t.Fatalf("Lambda permission %q lacks alias %q", r.Name, previousName)
+}
+
+func TestMigrationPreservesSecretsAndRehomesVerificationResources(t *testing.T) {
+	m := &mocks{}
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		return Deploy(ctx, Settings{Domain: "example.test", Sender: "sender@example.test", Recipient: "tester@example.test", Archive: archive(t), Policy: config.Defaults()})
+	}, pulumi.WithMocks("email-verification-testhost", "test-ci", m))
+	if err != nil {
+		t.Fatal(err)
+	}
+	expected := map[string]string{}
+	for _, suffix := range []string{"hmac", "encryption", "secrets", "secret-values", "sender", "worker", "worker-target"} {
+		expected["verification.runtime-"+suffix] = "testhost.app-" + suffix
+	}
+	for _, r := range m.rows {
+		old, ok := expected[r.Name]
+		if !ok {
+			continue
+		}
+		found := false
+		for _, a := range r.RegisterRPC.GetAliases() {
+			spec := a.GetSpec()
+			if spec.GetName() == old && strings.HasSuffix(spec.GetParentUrn(), "::testhost.app") {
+				found = true
+			}
+		}
+		if !found {
+			t.Fatalf("%s must adopt %s with its former parent", r.Name, old)
+		}
+		if strings.HasPrefix(r.TypeToken, "aws:") && r.TypeToken != "aws:secretsmanager/secretVersion:SecretVersion" && r.TypeToken != "aws:cloudwatch/eventTarget:EventTarget" {
+			if tags, ok := r.Inputs["tags"]; ok && tags.ObjectValue()["ic:feature"].StringValue() != "verification" {
+				t.Fatal("moved resource still owned by test host")
+			}
+		}
+		delete(expected, r.Name)
+	}
+	if len(expected) != 0 {
+		t.Fatalf("missing migrated resources: %v", expected)
+	}
 }

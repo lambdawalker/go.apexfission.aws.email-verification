@@ -14,3 +14,9 @@ GO
 if go build -mod=mod . >result.txt 2>&1; then echo 'External import unexpectedly succeeded' >&2; exit 1; fi
 if ! grep -q 'use of internal package .* not allowed' result.txt; then cat result.txt >&2; exit 1; fi
 echo 'External test-host import rejected as expected.'
+
+# Compile and execute a real consumer outside this module. Only public packages
+# may participate; this guards against accidentally depending on demo internals.
+cp "$root/examples/consumer/main.go" main.go
+go run -mod=mod .
+echo 'External consumer completed verification through the reusable worker.'

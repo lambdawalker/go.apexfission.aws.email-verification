@@ -12,20 +12,24 @@ The source remains visible in the repository.
 | Artifact | Purpose |
 | --- | --- |
 | Verifier DynamoDB table and ES256 KMS key | Created through the existing Composer verification feature. Stores transactions and signs assertions. |
-| Separate host DynamoDB table | Stores fixed requests, preparation markers, dispatch, acceptance and the worker scan cursor. Never shares the real application's records. |
-| Test host Lambda | Imports the verification library. Accepts operator commands through IAM, signed-in mobile requests through API Gateway, and worker ticks from EventBridge. |
+| Separate host DynamoDB table | Stores fixed requests, preparation markers, dispatch and acceptance state. Never shares the real application's records. |
+| Test host API Lambda | Imports the verification library. Accepts start/confirm/status through IAM and authenticated API Gateway requests. |
+| Verification worker Lambda | Public reusable worker with a demo-owned acceptance adapter. Receives EventBridge ticks and uses a separate execution role. |
 | Mobile demo API | The deployment wizard configures a Regional API Gateway, validated ACM certificate, and public DNS for the selected environment. A dedicated Cognito user pool authenticates invited testers. |
 | SES sender identity | Dedicated test sender. Sends only the six-digit code to the configured recipient. Both code and IAM policy restrict the recipient. |
 | Secrets Manager secret | Two independently generated 32-byte keys for proof HMAC and recoverable email encryption. Pulumi protects secret state; Lambda gets only the secret ARN in its environment. |
 | EventBridge rule | Runs a worker every minute. Scans pages of five verifier records, up to 100 per invocation within the time budget, persists the pagination cursor and attempts one phase per record. |
-| IAM role and CloudWatch logs | Grants exact table/key/secret/sender access. The application returns sanitized errors and never logs proofs, assertions, secret A or request bodies. |
+| Separate IAM roles and CloudWatch logs | API grants cover records/secrets; worker grants add signing, SES and scanning. The application returns sanitized errors and never logs proofs, assertions, secret A or request bodies. |
 
 ```mermaid
 flowchart TD
-    C["Local operator"] -->|"IAM Lambda invocation"| H["Test host"]
+    C["Local operator"] -->|"IAM Lambda invocation"| H["Test host API"]
     A["Android demo"] -->|"HTTPS with Cognito access token"| G["Environment API Gateway"]
     G --> H
-    E["Scheduled worker tick"] --> H
+    E["Scheduled worker tick"] --> W["Verification worker Lambda"]
+    W --> L
+    W --> D
+    W --> S
     H --> L["Public verification library"]
     H --> D["Host table"]
     L --> V["Verifier table"]
@@ -159,15 +163,16 @@ such as `expired` or `attempts_exhausted`.
 
 ## Run an email verification
 
-Replace `FUNCTION` with that output:
+Replace `FUNCTION` with that output. Set `WORKER` to `testHostWorkerFunction`;
+the API intentionally rejects `tick`:
 
 ```sh
 python3 scripts/testhost-client.py start --function FUNCTION --email tester@example.com
-python3 scripts/testhost-client.py tick --function FUNCTION
+python3 scripts/testhost-client.py tick --function WORKER
 # Read the email. The code is prompted without echoing it:
 python3 scripts/testhost-client.py confirm --function FUNCTION
-python3 scripts/testhost-client.py tick --function FUNCTION
-python3 scripts/testhost-client.py tick --function FUNCTION
+python3 scripts/testhost-client.py tick --function WORKER
+python3 scripts/testhost-client.py tick --function WORKER
 python3 scripts/testhost-client.py status --function FUNCTION
 ```
 
@@ -215,7 +220,7 @@ sequenceDiagram
   also be unresolved; use a new explicitly authorized test rather than guessing.
 - Library CAS writes and stored attempt/deadline values arbitrate concurrent
   workers. A crash around SES delivery can still produce duplicate emails.
-- The cursor survives restarts and revisits transient failures. This scanner is
+- The verifier-owned cursor survives restarts and revisits transient failures. This scanner is
   intentionally for low-volume testing. It is not a production queue/index
   implementation; accumulated terminal rows or high active volume increase the
   scan cycle and can delay work past expiry. Each invocation checkpoints completed
@@ -244,3 +249,8 @@ and JWT authorization on the mobile routes. `scripts/testhost-import-test.sh` co
 that Go refuses its import of the internal host. CI also builds the deployable ZIP.
 These checks are local/mocked; actual SES delivery and AWS permissions require a
 live run in your selected test account.
+
+## Reusable runtime boundary
+
+See [Reusable AWS feature](reusable-feature.md) for extraction, two-function
+deployment, resource adoption aliases, consumer examples and limitations.

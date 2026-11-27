@@ -58,7 +58,8 @@ The command is invoked only after validation succeeds. JSON values are integer
 seconds and overlay documented defaults; unknown, duplicate and null fields are
 rejected. Environment overrides must be materialized into that effective JSON
 before this gate. This wrapper itself creates no AWS resources. The optional Composer/Pulumi module
-provides verifier storage and signing resources.
+provides verifier storage and signing resources, plus an optional reusable AWS
+runtime for secrets, email delivery and a scheduled worker.
 
 The pipeline runs tests, race detection, vet and default configuration validation.
 Host deployments must use the gate and the same constructor/startup validation.
@@ -69,6 +70,9 @@ See [Composer integration](docs/design/composer-integration.md) for the versione
 feature contract, native Pulumi module, host ownership and diagrams.
 Run `go run ./examples/composed` for an offline composition plan.
 The optional `infrastructure` module requires Go 1.27.3+; the runtime stays on Go 1.25.
+
+See [Reusable AWS feature](docs/design/reusable-feature.md) for public runtime
+adapters, worker integration, permissions and migration.
 
 ## Isolated test host
 

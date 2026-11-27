@@ -9,8 +9,10 @@ The isolated test-host Pulumi entry point also uses `composer.Application`.
 It registers the verifier and the test host as features, binds their
 verification contract with `Application.Inject`, and deploys the plan through
 the Composer Pulumi adapter. The test-host repository owns the Pulumi component
-factory that builds the host-specific resources, including the Lambda and mobile
-API. The shared deployment wizard is provided by Composer's `deploycli` module.
+factory that builds the host-specific API Lambda and mobile API. It consumes
+the public `infrastructure.NewRuntime` component for verification secrets, SES
+and the separately permissioned worker. Composer's `deploycli` module provides
+the shared deployment wizard.
 
 ## Ownership and contract
 
@@ -97,6 +99,13 @@ no cloud resources. This is not a live AWS deployment or an IAM authorization te
 `infrastructure/examples/embedded` is an optional Pulumi entry point requiring
 `domain` and `policyJSON` configuration, plus the parent AWS provider settings.
 It provisions only verifier storage/signing, not a usable email service. No cloud
-update was executed to validate this change. SES, archive/legal-hold publication,
-rotation, IAM attachments, monitoring, scheduler and host business integration
-remain explicit production work in the implementation status.
+update was executed to validate this change. The optional runtime below supplies
+SES, scoped IAM and a bounded worker.
+Archive/legal-hold publication, rotation, production work indexing, monitoring
+and host business integration remain explicit production work.
+
+## Optional runtime composition
+
+The storage/signing contract above remains compatible. Add `NewRuntime` for
+reusable worker/email provisioning and `Runtime.GrantAPI` for scoped API access.
+See [Reusable AWS feature](reusable-feature.md) for integration and migration.

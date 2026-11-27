@@ -37,7 +37,7 @@ def invoke(function, payload):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['start', 'confirm', 'status', 'tick'])
-    parser.add_argument('--function', required=True)
+    parser.add_argument('--function', required=True, help='API function for start/confirm/status; worker function for tick')
     parser.add_argument('--email', help='Configured test recipient; required for start')
     parser.add_argument('--session', type=Path, default=Path('.testhost/session.json'))
     args = parser.parse_args()

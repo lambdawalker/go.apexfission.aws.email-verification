@@ -303,3 +303,11 @@ reports. Windows is cross-compiled; actual Windows console/ACL behavior still
 needs an operator test. No real AWS/GitHub environment setup or deployment is run
 merely to verify this tooling. The existing test-host limitations around scan-based
 scheduling, pinned-key trust and safe cleanup still apply.
+
+## API and worker resources
+
+The verification runtime group owns its secrets, sender, worker Lambda, role,
+logs and schedule. The host retains the API Lambda and client access resources.
+Both functions use the same ZIP with fixed deployment modes and separate grants.
+Outputs include `testHostWorkerFunction`, `testHostWorkerFunctionArn` and
+`testHostWorkerLogs`. See [migration notes](reusable-feature.md#existing-demo-migration).
