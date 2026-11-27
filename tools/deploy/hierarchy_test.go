@@ -21,6 +21,7 @@ func TestModuleAncestorSurvivesPreviewStateAndHTML(t *testing.T) {
 	const hostType = "apexfission:email-verification:TestHost"
 	module := scope + moduleType + "::email-verification"
 	backend := scope + moduleType + "$" + backendType + "::verification.backend"
+	oldBackend := scope + backendType + "::verification.backend"
 	runtime := scope + moduleType + "$" + runtimeType + "::verification.runtime"
 	host := scope + hostType + "::testhost.app"
 	// Child-first order also checks that hierarchy does not depend on event order.
@@ -40,12 +41,19 @@ func TestModuleAncestorSurvivesPreviewStateAndHTML(t *testing.T) {
 	}
 	var stream bytes.Buffer
 	for _, resource := range resources {
-		event := map[string]any{"resourcePreEvent": map[string]any{"metadata": map[string]any{"urn": resource["urn"], "type": resource["type"], "op": "same", "new": resource}}}
+		metadata := map[string]any{"urn": resource["urn"], "type": resource["type"], "op": "same", "new": resource}
+		if resource["urn"] == backend {
+			metadata["old"] = map[string]any{"urn": oldBackend, "type": backendType, "custom": false}
+		}
+		event := map[string]any{"resourcePreEvent": map[string]any{"metadata": metadata}}
 		if err := json.NewEncoder(&stream).Encode(event); err != nil {
 			t.Fatal(err)
 		}
 	}
-	preview, err := pulumicli.ApplyPreview(nil, &stream)
+	// Existing stacks still record the former root URN. The preview must move
+	// that entry, rather than display it alongside the newly parented component.
+	legacy := []reporting.Artifact{{Key: oldBackend, Name: "verification.backend", Type: backendType, Component: true}}
+	preview, err := pulumicli.ApplyPreview(legacy, &stream)
 	if err != nil {
 		t.Fatal(err)
 	}
