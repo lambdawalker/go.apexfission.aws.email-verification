@@ -281,3 +281,60 @@ func TestMigrationPreservesSecretsAndRehomesVerificationResources(t *testing.T) 
 		t.Fatalf("missing migrated resources: %v", expected)
 	}
 }
+
+func TestFeatureComponentsShareModuleAncestor(t *testing.T) {
+	m := &mocks{}
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		return Deploy(ctx, Settings{Domain: "example.test", Sender: "sender@example.test", Recipient: "tester@example.test", Archive: archive(t), Policy: config.Defaults()})
+	}, pulumi.WithMocks("email-verification-testhost", "test-ci", m))
+	if err != nil {
+		t.Fatal(err)
+	}
+	const scope = "urn:pulumi:test-ci::email-verification-testhost::"
+	const groupType = "apexfission:email-verification:Feature"
+	groupURN := scope + groupType + "::email-verification"
+	seen := map[string]bool{}
+	for _, r := range m.rows {
+		switch r.Name {
+		case "email-verification":
+			if r.TypeToken != groupType || r.RegisterRPC.GetCustom() {
+				t.Fatal("module ancestor must be a logical component")
+			}
+			seen[r.Name] = true
+		case "verification.backend", "verification.runtime":
+			if r.RegisterRPC.GetParent() != groupURN {
+				t.Fatalf("%s parent = %s", r.Name, r.RegisterRPC.GetParent())
+			}
+			rootAlias := false
+			for _, alias := range r.RegisterRPC.GetAliases() {
+				if alias.GetSpec().GetNoParent() {
+					rootAlias = true
+				}
+			}
+			if !rootAlias {
+				t.Fatalf("%s lost its former root identity", r.Name)
+			}
+			seen[r.Name] = true
+		case "testhost.app":
+			if r.RegisterRPC.GetParent() == groupURN {
+				t.Fatal("host application nested inside reusable feature")
+			}
+			seen[r.Name] = true
+		case "verification.backend-transactions", "verification.backend-signing":
+			want := scope + groupType + "$apexfission:email-verification:StorageAndSigner::verification.backend"
+			if r.RegisterRPC.GetParent() != want || !r.RegisterRPC.GetProtect() {
+				t.Fatal("storage/signing ancestry or deletion protection lost")
+			}
+			seen[r.Name] = true
+		case "verification.runtime-secrets":
+			want := scope + groupType + "$apexfission:email-verification:Runtime::verification.runtime"
+			if r.RegisterRPC.GetParent() != want || !r.RegisterRPC.GetProtect() {
+				t.Fatal("secret ancestry or deletion protection lost")
+			}
+			seen[r.Name] = true
+		}
+	}
+	if len(seen) != 7 {
+		t.Fatalf("missing hierarchy members: %v", seen)
+	}
+}

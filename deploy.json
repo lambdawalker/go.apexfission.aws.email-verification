@@ -26,7 +26,8 @@
     "testHostWorkerLogs"
   ],
   "ArtifactFeaturePrefixes": {
-    "verification.": "email-verification"
+    "verification.": "email-verification",
+    "email-verification": "email-verification"
   },
   "LegacyComponentNames": {
     "apexfission:email-verification:StorageAndSigner": "verification.backend",
@@ -100,7 +101,8 @@
     "verification.runtime-worker-logs": "Collects background verification logs with a fourteen-day retention period.",
     "verification.runtime-worker-access": "Scopes worker access to the verifier table, signing key, secret and sender identity.",
     "verification.runtime-worker-logging": "Allows the worker to write only to its own log group.",
-    "verification.runtime-host-acceptance": "Host-supplied permissions required to durably accept verification results."
+    "verification.runtime-host-acceptance": "Host-supplied permissions required to durably accept verification results.",
+    "email-verification": "Reusable email verification feature module containing storage/signing and runtime components."
   },
   "InputsFile": "testhost.json",
   "DiscoveryStack": {

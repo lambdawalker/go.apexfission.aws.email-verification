@@ -311,3 +311,8 @@ logs and schedule. The host retains the API Lambda and client access resources.
 Both functions use the same ZIP with fixed deployment modes and separate grants.
 Outputs include `testHostWorkerFunction`, `testHostWorkerFunctionArn` and
 `testHostWorkerLogs`. See [migration notes](reusable-feature.md#existing-demo-migration).
+
+The artifact tree and topology now put `verification.backend` and
+`verification.runtime` beneath the common `email-verification` module ancestor.
+The `testhost.app` group and deployment-state bucket remain outside it. Run a new
+preview to regenerate reports with this hierarchy.

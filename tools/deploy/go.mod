@@ -4,6 +4,8 @@ go 1.25.0
 
 tool github.com/lambdawalker/go.infra.composer/deploycli/cmd/infra-deploy
 
+require github.com/lambdawalker/go.infra.composer v0.0.0-20261127172100-2fa5c587668b
+
 require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.29.9 // indirect
@@ -19,7 +21,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/lambdawalker/go.infra.composer v0.0.0-20261127172100-2fa5c587668b // indirect
 	github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261127172100-2fa5c587668b // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
