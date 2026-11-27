@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/aed0fabaa04f08d1405ff3af2a517ef907c9c2e6/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/8e4cf47015e5b13d41280ee1935ce85a7562b2f9/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -24,12 +24,12 @@ wizard. To open the web interface directly, run `./deploy.sh --server` or
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
 for the Android demo endpoint appears as an engraved glass plaque with a sapphire-blue frame, TLS letters and ribbon.
 Choose **TLS shield** in the Topology toolbar to switch to the ruby shield.
-The API Gateway uses a violet aperture. The custom hostname’s API mapping (`testhost.app-demo-mapping`) uses a glass diverter valve with a nickel lever and a teal L-shaped passage. Its `start`, `confirm`, and `status` routes each use a violet glass sextant with a cyan packet on the scale. Their shared Lambda integration, `testhost.app-demo-invoke`, uses a rounded violet glass clevis and orange glass tongue joined by a silver pin.
+The API Gateway uses a forward-facing violet aperture. The custom domain (`testhost.app-demo-domain`) appears as a hanging amethyst sign engraved with `www`. Its API mapping (`testhost.app-demo-mapping`) uses a level three-port glass valve with a teal L-shaped passage. The `start`, `confirm`, and `status` routes use violet glass sextants with satin nickel telescopes and index arms. Their shared Lambda integration, `testhost.app-demo-invoke`, uses a rounded violet glass clevis and orange glass tongue joined by a silver pin.
 The Secrets Manager secret (`testhost.app-secrets`) appears as a ruby glass vault with an open door and a cyan cartridge. Its secret version (`testhost.app-secret-values`) appears as a scratched glass manuscript with translucent garnet edges, a woven teal tie and a ruby wax seal. The SES sender identity appears as an engraved glass certificate with a plum frame, envelope and ribbon. Each Lambda invocation permission uses the same engraved plaque with a mandarin-orange frame, λ and ribbon. The function itself uses the standalone orange λ.
 
 The IAM execution role has a ruby person silhouette, ACM certificate validation has emerald ACM lettering, and the API Gateway JWT authorizer has teal JWT lettering. All three share the engraved certificate shape and matching frame and ribbon.
 
-Slender amber-tinted glass conduits point from each parent toward its child. Each arrowhead floats just outside the child model.
+Selecting an artifact traces its visible silhouette in pale blue. Slender amber-tinted glass conduits point from each parent toward its child. Each arrowhead floats just outside the child model.
 
 The glass bodies use the tinted finish of the certificate plaques. You can see other icons through overlapping glass. Details such as hinges and envelope folds stay opaque.
 
