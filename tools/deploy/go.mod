@@ -19,8 +19,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.17 // indirect
 	github.com/aws/smithy-go v1.22.2 // indirect
 	github.com/charmbracelet/x/term v0.2.1 // indirect
-	github.com/lambdawalker/go.infra.composer v0.0.0-20261125233535-2579e8a3cf4f // indirect
-	github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261127014409-6ec03fc947b1 // indirect
+	github.com/lambdawalker/go.infra.composer v0.0.0-20261127024019-a18a95d83c82 // indirect
+	github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261127024341-a430bc93d768 // indirect
 	golang.org/x/sys v0.36.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

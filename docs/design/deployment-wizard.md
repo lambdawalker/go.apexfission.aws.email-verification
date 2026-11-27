@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/6ec03fc947b1009738c6fb8b7faf720c7ac2686b/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/a430bc93d7684778bff4cf2b3723b6e9abf30872/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -32,6 +32,8 @@ Both RandomBytes resources (`testhost.app-hmac` and `testhost.app-encryption`) u
 The Secrets Manager secret (`testhost.app-secrets`) appears as a ruby glass vault with an open door and a cyan cartridge. Its secret version (`testhost.app-secret-values`) appears as a scratched glass manuscript with translucent garnet edges, a woven teal tie and a ruby wax seal. The SES sender identity appears as an engraved glass certificate with a plum frame, envelope and ribbon. Each Lambda invocation permission uses the same engraved plaque with a mandarin-orange frame, λ and ribbon. The function itself uses the standalone orange λ.
 
 The IAM execution role has a ruby person silhouette, ACM certificate validation has emerald ACM lettering, and the API Gateway JWT authorizer has teal JWT lettering. All three share the engraved certificate shape and matching frame and ribbon.
+
+The artifact tree keeps Pulumi components as expandable groups. Expand `verification.backend` to see the DynamoDB transactions table and KMS signing key. In Topology, a glass sphere represents each component and points to its children. Older saved inventories pick up component ownership on the next fresh preview.
 
 Selecting an artifact traces its visible silhouette in pale blue. Slender amber-tinted glass conduits point from each parent toward its child. Each arrowhead floats just outside the child model.
 
