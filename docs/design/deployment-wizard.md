@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/5f02e488b54dda8e5e36106ac84891563623ed33/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/71f14bd3394d5ab256d98aab1ad0d973adabc966/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -23,7 +23,7 @@ wizard. To open the web interface directly, run `./deploy.sh --server` or
 `.\deploy.bat --server` on Windows. Select a target with a saved deployment
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
 for the Android demo endpoint appears as an engraved glass plaque with a sapphire-blue frame, TLS letters and ribbon.
-Choose **TLS shield** in the Topology toolbar to switch to the ruby shield.
+Open **Icon settings** (the gear in the Topology toolbar) and choose **TLS shield** beside the certificate to use its ruby shield. The table lists only artifacts in the current inventory with alternative 3D icons. Each row controls one artifact.
 The API Gateway uses a forward-facing violet aperture. The custom domain (`testhost.app-demo-domain`) appears as a hanging amethyst sign engraved with `www`. Its API mapping (`testhost.app-demo-mapping`) uses a level three-port glass valve with a teal L-shaped passage. The `start`, `confirm`, and `status` routes use violet glass sextants with graphite nickel telescopes and index arms matching the domain sign. Their shared Lambda integration, `testhost.app-demo-invoke`, uses a rounded violet glass clevis and orange glass tongue joined by a graphite nickel pin.
 The default API stage uses a three-arm signpost with engraved dev, qa and prod signs. The Cognito Android app client uses an indigo plaque with a person silhouette and a gear. The EventBridge worker rule uses the forked bridge, and its target uses the raspberry mail slot with an amber envelope.
 
