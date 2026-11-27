@@ -28,8 +28,8 @@ github.com/charmbracelet/x/term v0.2.1 h1:AQeHeLZ1OqSXhrAWpYUtZyX1T3zVxfpZuEQMIQ
 github.com/charmbracelet/x/term v0.2.1/go.mod h1:oQ4enTYFV7QN4m0i9mzHrViD7TQKvNEEkHUMCmsxdUg=
 github.com/lambdawalker/go.infra.composer v0.0.0-20261127024019-a18a95d83c82 h1:zP+6kJtvA/Xpcn0FuKLtdfv6mYult9dXsAx+vQNMjyk=
 github.com/lambdawalker/go.infra.composer v0.0.0-20261127024019-a18a95d83c82/go.mod h1:rUs6Et8eAaaUKYxSBJY6bahA7xlGZn2w5gymh6MBRZQ=
-github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261127043548-17c82e04baff h1:FXXis8oQvnkgSpqxUrTq4Hf+SGa4pXUzbxhx25GjM2o=
-github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261127043548-17c82e04baff/go.mod h1:oQq7sK/ts9bKNDmG4y7f9logFyRx/1Bfb+TeNWGLdr4=
+github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261127051756-c4486fee7627 h1:o0MJoJM8K84W5sw+CGWDDZHArOb7DvQv/UdzKYTqDJY=
+github.com/lambdawalker/go.infra.composer/deploycli v0.0.0-20261127051756-c4486fee7627/go.mod h1:oQq7sK/ts9bKNDmG4y7f9logFyRx/1Bfb+TeNWGLdr4=
 golang.org/x/sys v0.36.0 h1:KVRy2GtZBrk1cBYA7MKu5bEZFxQk4NIDV6RLVcC8o0k=
 golang.org/x/sys v0.36.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
