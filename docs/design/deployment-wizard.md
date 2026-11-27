@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/44979e0c04c43cefc731dea99ba16dcb814dc3ad/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/7650f92aa305bdc8ba807cac0fb547ca92c52e9c/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -33,9 +33,9 @@ The Secrets Manager secret (`testhost.app-secrets`) appears as a ruby glass vaul
 
 The IAM execution role has a ruby person silhouette, ACM certificate validation has emerald ACM lettering, and the API Gateway JWT authorizer has teal JWT lettering. All three share the engraved certificate shape and matching frame and ribbon.
 
-The artifact tree keeps Pulumi components as expandable groups. Expand `verification.backend` to see the DynamoDB transactions table and KMS signing key. Each component appears as an orbital glass sphere on a hexagonal shelf. Its resources occupy the shelves below it. Every tower’s lowest shelf sits at ground level. On startup, the wizard also restores the verifier and test-host groups in older saved inventories using their children’s Pulumi identities.
+The artifact tree keeps Pulumi components as expandable groups. Expand `verification.backend` to see the DynamoDB transactions table and KMS signing key. Each component appears as an orbital glass sphere on a hexagonal shelf. Each parent sits directly above the center of its children’s hexagonal floor. Siblings with no children share a central tile. Branching siblings occupy separate tiles around it, spaced to fit their descendants. Every tower’s lowest shelf sits at ground level. On startup, the wizard also restores the verifier and test-host groups in older saved inventories using their children’s Pulumi identities.
 
-Selecting an artifact traces its visible silhouette in pale blue. Amber conduits show Pulumi parentage. Cyan conduits show AWS attachments, such as invocation permissions under the Lambda function and the inline policy under the IAM role. An attachment’s details identify both its AWS host and its Pulumi group. Each arrowhead floats just outside the child model.
+Selecting an artifact traces its visible silhouette in pale blue. Amber conduits show Pulumi parentage. Cyan conduits show AWS attachments, such as invocation permissions under the Lambda function and the inline policy under the IAM role. An attachment’s details identify both its AWS host and its Pulumi group. Each arrowhead floats just outside the child model. The **Arrows** switch beside **Fit view** shows or hides both kinds of connection.
 
 The glass bodies use the tinted finish of the certificate plaques. You can see other icons through overlapping glass. Metal hardware uses the domain sign’s satin graphite nickel finish. The CloudWatch ticker has recessed marks in darker ivory glass. The Cloudflare DNS and Route 53 signposts use taller nickel arrows and violet glass badges.
 
