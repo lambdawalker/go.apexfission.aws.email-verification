@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/a430bc93d7684778bff4cf2b3723b6e9abf30872/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/1adecd540c7c63963d477a580477f8aebd7eb3f5/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -33,7 +33,7 @@ The Secrets Manager secret (`testhost.app-secrets`) appears as a ruby glass vaul
 
 The IAM execution role has a ruby person silhouette, ACM certificate validation has emerald ACM lettering, and the API Gateway JWT authorizer has teal JWT lettering. All three share the engraved certificate shape and matching frame and ribbon.
 
-The artifact tree keeps Pulumi components as expandable groups. Expand `verification.backend` to see the DynamoDB transactions table and KMS signing key. In Topology, a glass sphere represents each component and points to its children. Older saved inventories pick up component ownership on the next fresh preview.
+The artifact tree keeps Pulumi components as expandable groups. Expand `verification.backend` to see the DynamoDB transactions table and KMS signing key. In Topology, a glass sphere represents each component and points to its children. On startup, the wizard also restores the verifier and test-host groups in older saved inventories using their children’s Pulumi identities.
 
 Selecting an artifact traces its visible silhouette in pale blue. Slender amber-tinted glass conduits point from each parent toward its child. Each arrowhead floats just outside the child model.
 
