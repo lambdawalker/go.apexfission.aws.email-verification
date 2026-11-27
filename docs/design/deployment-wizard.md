@@ -1,6 +1,6 @@
 # Test-host deployment wizard
 
-The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/71f14bd3394d5ab256d98aab1ad0d973adabc966/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
+The root `deploy.sh` and `deploy.bat` run the shared [Infra Composer CLI](https://github.com/lambdawalker/go.infra.composer/tree/17c82e04baff7ef5cf2796fb3fb27014995f71eb/deploycli), pinned in `tools/deploy/go.mod`. The target and feature inputs are declared in `deploy.json`. The CLI deploys only the isolated
 email-verification test host. The library and Composer integration remain usable
 without this wizard. The test host has its own authenticated Android demo API.
 
@@ -23,7 +23,7 @@ wizard. To open the web interface directly, run `./deploy.sh --server` or
 `.\deploy.bat --server` on Windows. Select a target with a saved deployment
 and open **Topology** to see its AWS resources as 3D models. The ACM certificate
 for the Android demo endpoint appears as an engraved glass plaque with a sapphire-blue frame, TLS letters and ribbon.
-Open **Icon settings** (the gear in the Topology toolbar) and choose **TLS shield** beside the certificate to use its ruby shield. The table lists only artifacts in the current inventory with alternative 3D icons. Each row controls one artifact.
+Open **Icon settings** (the gear in the Topology toolbar) and choose **TLS shield** beside the certificate to use its ruby shield. The table lists only artifacts in the current inventory with alternative 3D icons. Each row controls one artifact. Icon choices and the Arrows, Selection focus, Platform opacity and Icon glass transparency settings are saved for the project and restored when the wizard reopens.
 The API Gateway uses a forward-facing violet aperture. The custom domain (`testhost.app-demo-domain`) appears as a hanging amethyst sign engraved with `www`. Its API mapping (`testhost.app-demo-mapping`) uses a level three-port glass valve with a teal L-shaped passage. The `start`, `confirm`, and `status` routes use violet glass sextants with graphite nickel telescopes and index arms matching the domain sign. Their shared Lambda integration, `testhost.app-demo-invoke`, uses a rounded violet glass clevis and orange glass tongue joined by a graphite nickel pin.
 The default API stage uses a three-arm signpost with engraved dev, qa and prod signs. The Cognito Android app client uses an indigo plaque with a person silhouette and a gear. The EventBridge worker rule uses the forked bridge, and its target uses the raspberry mail slot with an amber envelope.
 
@@ -41,7 +41,7 @@ Selecting an artifact traces its visible silhouette in pale blue. Amber conduits
 
 The glass bodies use the tinted finish of the certificate plaques. You can see other icons through overlapping glass. Metal hardware uses the domain sign’s satin graphite nickel finish. The CloudWatch ticker has recessed marks in darker ivory glass. The Cloudflare DNS and Route 53 signposts use taller nickel arrows and violet glass badges.
 
-In the topology viewport, drag to orbit, drag with the middle mouse button to pan, and scroll to zoom. Press **Ctrl+B** and drag a rectangle to frame that area, or press **Esc** to cancel. The upper-right controls include six axis views, pan, zoom, and box zoom. Click the **Home** icon or press **Home** in the viewport to restore the opening angle, center, and zoom. **Fit view** frames the visible artifacts at the current angle.
+In the topology viewport, drag to orbit, drag with the middle mouse button to pan, and scroll to zoom. Press **Ctrl+B** and drag a rectangle to frame that area, or press **Esc** to cancel. The upper-right controls include six axis views, pan, zoom, and box zoom. Click the **Home** icon or press **Home** in the viewport to restore the opening angle, center, and zoom. **Fit view** frames the visible artifacts at the current angle. Press **F** or click **Frame selection** to frame the selected floor and its branch. Use **Collapse branch** and **Expand branch** to change visibility while keeping the layout stable. Click an ancestor in the viewport breadcrumb to select it.
 
 After choosing an interface, enter the local vault passphrase. The wizard
 collects settings and displays them for review before AWS or GitHub sign-in.
