@@ -19,6 +19,24 @@
     "apexfission:email-verification:StorageAndSigner": "verification.backend",
     "apexfission:email-verification:TestHost": "testhost.app"
   },
+  "ArtifactAttachments": {
+    "testhost-app-demo-permission-confirm": "testhost-app-lambda",
+    "testhost-app-demo-permission-start": "testhost-app-lambda",
+    "testhost-app-demo-permission-status": "testhost-app-lambda",
+    "testhost-app-worker-permission": "testhost-app-lambda",
+    "testhost.app-demo-android": "testhost.app-demo-users",
+    "testhost.app-demo-auth": "testhost.app-demo-api",
+    "testhost.app-demo-confirm": "testhost.app-demo-api",
+    "testhost.app-demo-domain-validated": "testhost.app-demo-certificate",
+    "testhost.app-demo-invoke": "testhost.app-demo-api",
+    "testhost.app-demo-mapping": "testhost.app-demo-domain",
+    "testhost.app-demo-stage": "testhost.app-demo-api",
+    "testhost.app-demo-start": "testhost.app-demo-api",
+    "testhost.app-demo-status": "testhost.app-demo-api",
+    "testhost.app-permissions": "testhost.app-role",
+    "testhost.app-secret-values": "testhost.app-secrets",
+    "testhost.app-worker-target": "testhost.app-worker"
+  },
   "ArtifactIconVariants": {
     "testhost.app-demo-auth": "jwt"
   },
